@@ -31,6 +31,7 @@ Dự án Frontend hiện đại, tối ưu cho ứng dụng IoT, giám sát tele
 ```
 src/
 ├── components/
+│   ├── pwa-reload-prompt.tsx  # Thông báo cập nhật PWA & offline ready
 │   ├── theme-provider.tsx     # Đồng bộ theme Sáng / Tối (Dark mode)
 │   └── ui/                    # Toàn bộ 27+ component shadcn/ui
 ├── hooks/
@@ -39,18 +40,13 @@ src/
 │   ├── queryClient.ts         # Cấu hình TanStack Query Client
 │   ├── socket.ts              # Socket.IO client singleton kết nối realtime
 │   └── utils.ts               # Hàm utility cn() kết hợp clsx & tailwind-merge
-├── pages/
-│   ├── DashboardPage.tsx      # Demo KPI cards, ECharts telemetry realtime, Toast
-│   ├── DevicesPage.tsx        # Demo TanStack Table (sort, search, pagination)
-│   ├── TopologyPage.tsx       # Demo React Flow Canvas & Resizable Panels
-│   └── SettingsPage.tsx       # Demo React Hook Form + Zod validation
 ├── stores/
-│   └── useAppStore.ts         # Zustand store (theme, sidebar, selectedDevice)
-├── types/                     # Chứa TypeScript interfaces dùng chung
-├── App.tsx                    # Routing, Layout, Toaster, TooltipProvider
+│   └── useAppStore.ts         # Zustand store (theme, global state)
+├── types/                     # Chứa TypeScript interfaces
+├── App.tsx                    # Điểm khởi đầu gọn gàng (Providers, Toaster)
 ├── index.css                  # Cấu hình Tailwind v4 & Design tokens shadcn
 ├── main.tsx                   # Điểm khởi chạy ứng dụng
-└── vite-env.d.ts              # Type declarations cho Vite Env
+└── vite-env.d.ts              # Type declarations cho Vite Env & PWA
 ```
 
 ---
