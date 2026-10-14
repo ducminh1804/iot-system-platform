@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Speedometer Gauge Demo · Hallmark Ultra-Smooth Animation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --color-green: #22c55e;
+      --color-yellow: #facc15;
+      --color-red: #ef4444;
+      --accent: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at 50% 20%, #1e293b 0%, #090d16 100%);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      overflow-x: clip;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+    }
+
+    header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      color: #60a5fa;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(180deg, #ffffff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    p.subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 580px;
+    }
+
+    /* Main Gauge Card */
+    .gauge-card {
+      width: 100%;
+      max-width: 560px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 36px 28px 28px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .svg-wrapper {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      overflow: visible;
+      filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.25));
+    }
+
+    /* Needle element with ultra smooth dynamic CSS transform & GPU Acceleration */
+    #gauge-needle {
+      transform-origin: 240px 240px;
+      /* Mặc định gia tốc cơ học Spring nảy nhẹ siêu mượt */
+      transition: transform 950ms cubic-bezier(0.34, 1.42, 0.64, 1);
+      -webkit-transition: -webkit-transform 950ms cubic-bezier(0.34, 1.42, 0.64, 1);
+      will-change: transform;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+    }
+
+    .metrics-panel {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .metric-value {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .metric-unit {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .zone-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(250, 204, 21, 0.15);
+      color: #facc15;
+      border: 1px solid rgba(250, 204, 21, 0.25);
+      transition: all 300ms ease;
+    }
+
+    /* Controls Panel */
+    .controls {
+      width: 100%;
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .slider-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: #334155;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #3b82f6;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+      cursor: pointer;
+      transition: transform 150ms ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    /* Landmarks Buttons Grid */
+    .landmarks-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .landmarks-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+
+    .auto-play-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #3b82f6;
+      color: #ffffff;
+      transition: all 200ms ease;
+    }
+
+    .auto-play-btn.active {
+      background: #f59e0b;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+    }
+
+    .landmarks-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    @media (max-width: 520px) {
+      .landmarks-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .lm-btn {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      cursor: pointer;
+      transition: all 200ms ease;
+      text-align: left;
+    }
+
+    .lm-btn:hover {
+      background: rgba(30, 41, 59, 0.8);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .lm-btn.active {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: #3b82f6;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+    }
+
+    .lm-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .lm-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .lm-sub {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Easing Mode Selector */
+    .easing-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .easing-pills {
+      display: flex;
+      background: #1e293b;
+      padding: 3px;
+      border-radius: 8px;
+      gap: 4px;
+    }
+
+    .pill-btn {
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 150ms ease;
+    }
+
+    .pill-btn.active {
+      background: #334155;
+      color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Code Snippet Box */
+    .snippet-box {
+      width: 100%;
+      max-width: 560px;
+      background: #090d16;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .snippet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+
+    pre {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #38bdf8;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="badge">✦ Hallmark Ultra-Smooth SVG Component</div>
+      <h1>Speedometer Semicircle Gauge</h1>
+      <p class="subtitle">Mẫu SVG chuẩn xác 100% khớp ảnh mẫu: 3 phân vùng màu bán nguyệt (60° mỗi cung), kim giọt nước bo tròn, trục khuyên rỗng trắng, animation chuyển động qua các điểm mốc siêu mượt.</p>
+    </header>
+
+    <!-- Main Gauge Card -->
+    <div class="gauge-card">
+      <div class="svg-wrapper">
+        <!-- PURE SVG GAUGE CANVAS -->
+        <svg viewBox="0 0 480 290" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- 1. Dải màu XANH (180° đến 120°): Vàng chanh lime chuyển dần sang ngọc lục bảo -->
+            <linearGradient id="gauge-green" x1="0%" y1="100%" x2="70%" y2="0%">
+              <stop offset="0%" stop-color="#8ee04e" />
+              <stop offset="35%" stop-color="#6fd243" />
+              <stop offset="75%" stop-color="#3eb447" />
+              <stop offset="100%" stop-color="#2ba247" />
+            </linearGradient>
+
+            <!-- 2. Dải màu VÀNG (120° đến 60°): Vàng nắng tươi sáng ở đỉnh, chuyển vàng hổ phách nhẹ -->
+            <linearGradient id="gauge-yellow" x1="20%" y1="0%" x2="80%" y2="100%">
+              <stop offset="0%" stop-color="#ffea3d" />
+              <stop offset="50%" stop-color="#ffd014" />
+              <stop offset="100%" stop-color="#ffbf00" />
+            </linearGradient>
+
+            <!-- 3. Dải màu ĐỎ (60° đến 0°): Đỏ thẫm tại 60° chuyển dần sang đỏ cam rực rỡ tại 0° -->
+            <linearGradient id="gauge-red" x1="10%" y1="0%" x2="95%" y2="100%">
+              <stop offset="0%" stop-color="#aa1427" />
+              <stop offset="35%" stop-color="#cf2027" />
+              <stop offset="75%" stop-color="#ea3d28" />
+              <stop offset="100%" stop-color="#f35032" />
+            </linearGradient>
+
+            <!-- Đổ bóng nổi khối thực cho kim chỉ thị -->
+            <filter id="needle-shadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.45" />
+            </filter>
+          </defs>
+
+          <!-- 3 CUNG PHÂN VÙNG: Bán kính ngoài R=200, Bán kính trong r=100. Tâm (240, 240) -->
+          <g id="gauge-sectors" style="transition: all 500ms ease-out;">
+            <!-- VÙNG 1: XANH (180° -> 120°) -->
+            <path
+              id="sector-green"
+              d="M 40 240 A 200 200 0 0 1 140 66.8 L 190 153.4 A 100 100 0 0 0 140 240 Z"
+              fill="url(#gauge-green)"
+              style="transition: all 500ms ease-out;"
+            />
+
+            <!-- VÙNG 2: VÀNG (120° -> 60°) -->
+            <path
+              id="sector-yellow"
+              d="M 140 66.8 A 200 200 0 0 1 340 66.8 L 290 153.4 A 100 100 0 0 0 190 153.4 Z"
+              fill="url(#gauge-yellow)"
+              style="transition: all 500ms ease-out;"
+            />
+
+            <!-- VÙNG 3: ĐỎ (60° -> 0°) -->
+            <path
+              id="sector-red"
+              d="M 340 66.8 A 200 200 0 0 1 440 240 L 340 240 A 100 100 0 0 0 290 153.4 Z"
+              fill="url(#gauge-red)"
+              style="transition: all 500ms ease-out;"
+            />
+
+            <!-- Rãnh cắt radial mảnh tăng tính hoàn thiện -->
+            <line x1="140" y1="66.8" x2="190" y2="153.4" stroke="#ffffff" stroke-width="1.2" stroke-opacity="0.35" />
+            <line x1="340" y1="66.8" x2="290" y2="153.4" stroke="#ffffff" stroke-width="1.2" stroke-opacity="0.35" />
+
+            <!-- Cung viền hào quang phát sáng năng lượng đỉnh khi ở MỨC 3 (MAX) -->
+            <path
+              id="max-aura"
+              d="M 340 64 A 203 203 0 0 1 443 240"
+              fill="none"
+              stroke="#ef4444"
+              stroke-width="3.5"
+              stroke-linecap="round"
+              style="display: none; filter: drop-shadow(0 0 8px rgba(239,68,68,0.9));"
+            />
+          </g>
+
+          <!-- CHÂN ĐẾ GIA CÔNG DƯỚI ĐỒNG HỒ -->
+          <rect id="gauge-base" x="180" y="252" width="120" height="24" rx="8" fill="#1e252d" style="transition: fill 500ms ease;" />
+
+          <!-- KIM ĐO DẠNG KHỐI VUỐT THON MỀM VỚI LỖ TRỤC TRẮNG TINH KHÔI -->
+          <g id="gauge-needle" style="transform: rotate(0deg);" filter="url(#needle-shadow)">
+            <!-- Thân kim vuốt thon đều lên đỉnh tròn bo mịn, khớp 100% hình mẫu -->
+            <path
+              d="
+                M 212 240
+                A 28 28 0 0 0 268 240
+                L 247 88
+                A 7 7 0 0 0 233 88
+                Z
+              "
+              fill="#1e252d"
+            />
+            <!-- Lỗ khuyên trục tâm tròn trắng tinh xảo -->
+            <circle id="needle-pivot" cx="240" cy="240" r="13" fill="#ffffff" style="transition: all 300ms ease;" />
+          </g>
+        </svg>
+      </div>
+
+      <!-- Chỉ số kỹ thuật số hiển thị -->
+      <div class="metrics-panel">
+        <div class="metric-value">
+          <span id="metric-number">50.0</span>
+          <span class="metric-unit">%</span>
+        </div>
+        <div class="zone-indicator" id="zone-badge">
+          <span id="zone-text">Mức 2 · Vùng Vàng</span>
+        </div>
+      </div>
+
+      <!-- Bảng điều khiển tương tác các điểm mốc -->
+      <div class="controls">
+        <!-- Kéo kim thủ công -->
+        <div class="slider-row">
+          <div class="slider-header">
+            <span>Mức 0 (Min)</span>
+            <span>Kéo kim kiểm tra độ mượt</span>
+            <span>Mức 3 (MAX)</span>
+          </div>
+          <input type="range" id="gauge-slider" min="0" max="100" step="0.2" value="50" />
+        </div>
+
+        <!-- Các điểm mốc nhảy nhanh & Quét tự động -->
+        <div class="landmarks-section">
+          <div class="landmarks-header">
+            <span>CHUYỂN NHANH QUA 4 MỨC CHUẨN:</span>
+            <button class="auto-play-btn" id="btn-auto-sweep">
+              <span id="play-icon">▶</span>
+              <span id="play-text">Tự Động Quét Mượt</span>
+            </button>
+          </div>
+
+          <div class="landmarks-grid">
+            <button class="lm-btn" data-val="0" data-angle="-90">
+              <div class="lm-title">
+                <span>Mức 0</span>
+                <span class="lm-dot" style="background: #64748b"></span>
+              </div>
+              <span class="lm-sub">0% · -90° (Tắt)</span>
+            </button>
+
+            <button class="lm-btn" data-val="27.8" data-angle="-40">
+              <div class="lm-title">
+                <span>Mức 1</span>
+                <span class="lm-dot" style="background: #22c55e"></span>
+              </div>
+              <span class="lm-sub">28% · -40° (Xanh)</span>
+            </button>
+
+            <button class="lm-btn active" data-val="50" data-angle="0">
+              <div class="lm-title">
+                <span>Mức 2</span>
+                <span class="lm-dot" style="background: #ffd014"></span>
+              </div>
+              <span class="lm-sub">50% · 0° (Vàng)</span>
+            </button>
+
+            <button class="lm-btn" data-val="100" data-angle="90" style="border-color: rgba(239,68,68,0.4);">
+              <div class="lm-title">
+                <span style="color: #f87171; font-weight: 800;">Mức 3 (MAX)</span>
+                <span class="lm-dot" style="background: #ef4444"></span>
+              </div>
+              <span class="lm-sub" style="color: #fca5a5;">100% · +90° (Kịch Kim)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tùy chỉnh chế độ gia tốc mượt mà -->
+        <div class="easing-row">
+          <span>Phong cách gia tốc kim:</span>
+          <div class="easing-pills">
+            <button class="pill-btn active" data-easing="spring">Cơ Khí Spring (Nảy nhẹ)</button>
+            <button class="pill-btn" data-easing="fluid">Êm Ái Fluid (Apple)</button>
+            <button class="pill-btn" data-easing="linear">Tuyến Tính</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code Snippet Box -->
+    <div class="snippet-box">
+      <div class="snippet-header">
+        <span>CSS QUAN TRỌNG ĐẢM BẢO KIM QUAY MƯỢT TUYỆT ĐỐI</span>
+        <span style="color: #64748b;">cubic-bezier physics</span>
+      </div>
+      <pre>/* Quán tính kim đồng hồ cơ khí cao cấp (nảy nhẹ + hãm đà mượt mà) */
+#gauge-needle {
+  transform-origin: 240px 240px;
+  transition: transform 950ms cubic-bezier(0.34, 1.42, 0.64, 1);
+  will-change: transform;
+}</pre>
+    </div>
+  </div>
+
+  <script>
+    const needle = document.getElementById('gauge-needle');
+    const slider = document.getElementById('gauge-slider');
+    const metricNumber = document.getElementById('metric-number');
+    const zoneBadge = document.getElementById('zone-badge');
+    const zoneText = document.getElementById('zone-text');
+    const lmBtns = document.querySelectorAll('.lm-btn');
+    const pillBtns = document.querySelectorAll('.pill-btn');
+    const btnAutoSweep = document.getElementById('btn-auto-sweep');
+    const playIcon = document.getElementById('play-icon');
+    const playText = document.getElementById('play-text');
+
+    let currentVal = 50;
+    let isAutoSweeping = false;
+    let sweepInterval = null;
+    let sweepIndex = 2;
+
+    const sectors = document.getElementById('gauge-sectors');
+    const landmarks = [0, 27.8, 50, 100];
+
+    function applyValue(val) {
+      currentVal = Math.max(0, Math.min(100, val));
+      const isOff = currentVal <= 1.5;
+      const isMax = currentVal >= 98;
+      const angle = (currentVal / 100) * 180 - 90;
+
+      // Quay kim quanh tâm (240px, 240px) với GPU compositing translateZ(0)
+      needle.style.transform = `rotate(${angle}deg) translateZ(0)`;
+      slider.value = currentVal;
+      metricNumber.textContent = currentVal.toFixed(1);
+
+      const sectorGreen = document.getElementById('sector-green');
+      const sectorYellow = document.getElementById('sector-yellow');
+      const sectorRed = document.getElementById('sector-red');
+      const maxAura = document.getElementById('max-aura');
+      const needlePath = needle.querySelector('path');
+      const needlePivot = document.getElementById('needle-pivot');
+      const gaugeBase = document.getElementById('gauge-base');
+
+      // Cập nhật trạng thái dải màu bán nguyệt và badge
+      if (isOff) {
+        // TẮT HOÀN TOÀN: Dải màu mờ xám, kim xám, KHÔNG CÓ BẤT KỲ TEXT OVERLAY NÀO ĐÈ LÊN SVG
+        sectors.style.filter = 'grayscale(100%) brightness(75%)';
+        sectors.style.opacity = '0.2';
+        needlePath.style.fill = '#64748b';
+        needlePivot.removeAttribute('stroke');
+        needlePivot.removeAttribute('stroke-width');
+        gaugeBase.style.fill = '#475569';
+        maxAura.style.display = 'none';
+
+        zoneBadge.style.background = 'rgba(100, 116, 139, 0.15)';
+        zoneBadge.style.borderColor = 'rgba(100, 116, 139, 0.3)';
+        zoneBadge.style.color = '#94a3b8';
+        zoneText.textContent = 'Mức 0 · Tắt';
+      } else {
+        sectors.style.filter = 'none';
+        sectors.style.opacity = '1';
+        needlePath.style.fill = isMax ? '#0f172a' : '#1e252d';
+        gaugeBase.style.fill = isMax ? '#0f172a' : '#1e252d';
+
+        if (currentVal < 38) {
+          // Mức 1: Vùng Xanh đậm hơn các vùng còn lại
+          sectorGreen.style.opacity = '1';
+          sectorGreen.style.filter = 'brightness(1.15) saturate(1.35) drop-shadow(0 0 12px rgba(34,197,94,0.45))';
+          sectorYellow.style.opacity = '0.35';
+          sectorYellow.style.filter = 'saturate(0.6)';
+          sectorRed.style.opacity = '0.35';
+          sectorRed.style.filter = 'saturate(0.6)';
+          maxAura.style.display = 'none';
+          needlePivot.removeAttribute('stroke');
+
+          zoneBadge.style.background = 'rgba(34, 197, 94, 0.15)';
+          zoneBadge.style.borderColor = 'rgba(34, 197, 94, 0.3)';
+          zoneBadge.style.color = '#4ade80';
+          zoneText.textContent = 'Mức 1 · Vùng Xanh';
+        } else if (currentVal < 75) {
+          // Mức 2: Vùng Vàng đậm hơn các vùng còn lại
+          sectorGreen.style.opacity = '0.35';
+          sectorGreen.style.filter = 'saturate(0.6)';
+          sectorYellow.style.opacity = '1';
+          sectorYellow.style.filter = 'brightness(1.15) saturate(1.35) drop-shadow(0 0 12px rgba(250,204,21,0.45))';
+          sectorRed.style.opacity = '0.35';
+          sectorRed.style.filter = 'saturate(0.6)';
+          maxAura.style.display = 'none';
+          needlePivot.removeAttribute('stroke');
+
+          zoneBadge.style.background = 'rgba(250, 204, 21, 0.15)';
+          zoneBadge.style.borderColor = 'rgba(250, 204, 21, 0.3)';
+          zoneBadge.style.color = '#facc15';
+          zoneText.textContent = 'Mức 2 · Vùng Vàng';
+        } else {
+          // Mức 3: Vùng Đỏ đậm hơn, đặc biệt ở MAX cực kỳ nổi bật
+          sectorGreen.style.opacity = '0.25';
+          sectorGreen.style.filter = 'saturate(0.5)';
+          sectorYellow.style.opacity = '0.25';
+          sectorYellow.style.filter = 'saturate(0.5)';
+          sectorRed.style.opacity = '1';
+
+          if (isMax) {
+            sectorRed.style.filter = 'brightness(1.25) saturate(1.5) drop-shadow(0 0 16px rgba(239,68,68,0.85)) drop-shadow(0 0 28px rgba(220,38,38,0.5))';
+            maxAura.style.display = 'block';
+            needlePivot.setAttribute('stroke', '#ef4444');
+            needlePivot.setAttribute('stroke-width', '2.5');
+
+            zoneBadge.style.background = 'rgba(239, 68, 68, 0.25)';
+            zoneBadge.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+            zoneBadge.style.color = '#f87171';
+            zoneText.textContent = 'Mức 3 · MAX (Kịch Kim)';
+          } else {
+            sectorRed.style.filter = 'brightness(1.15) saturate(1.35) drop-shadow(0 0 12px rgba(239,68,68,0.45))';
+            maxAura.style.display = 'none';
+            needlePivot.removeAttribute('stroke');
+
+            zoneBadge.style.background = 'rgba(239, 68, 68, 0.15)';
+            zoneBadge.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+            zoneBadge.style.color = '#f87171';
+            zoneText.textContent = 'Mức 3 · Vùng Đỏ';
+          }
+        }
+      }
+
+      // Highlight mốc gần nhất
+      lmBtns.forEach(btn => {
+        const btnVal = parseFloat(btn.getAttribute('data-val'));
+        if (Math.abs(btnVal - currentVal) < 1.5) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+
+    // Slider listener
+    slider.addEventListener('input', (e) => {
+      stopAutoSweep();
+      applyValue(parseFloat(e.target.value));
+    });
+
+    // Landmark buttons click
+    lmBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        stopAutoSweep();
+        const val = parseFloat(btn.getAttribute('data-val'));
+        applyValue(val);
+      });
+    });
+
+    // Easing options
+    pillBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        pillBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const easing = btn.getAttribute('data-easing');
+        if (easing === 'spring') {
+          needle.style.transition = 'transform 950ms cubic-bezier(0.34, 1.42, 0.64, 1)';
+        } else if (easing === 'fluid') {
+          needle.style.transition = 'transform 850ms cubic-bezier(0.16, 1, 0.3, 1)';
+        } else {
+          needle.style.transition = 'transform 700ms linear';
+        }
+      });
+    });
+
+    // Auto sweep mode
+    function startAutoSweep() {
+      isAutoSweeping = true;
+      btnAutoSweep.classList.add('active');
+      playIcon.textContent = '❚❚';
+      playText.textContent = 'Dừng Quét';
+
+      sweepInterval = setInterval(() => {
+        sweepIndex = (sweepIndex + 1) % landmarks.length;
+        applyValue(landmarks[sweepIndex]);
+      }, 1500);
+    }
+
+    function stopAutoSweep() {
+      if (isAutoSweeping) {
+        isAutoSweeping = false;
+        btnAutoSweep.classList.remove('active');
+        playIcon.textContent = '▶';
+        playText.textContent = 'Tự Động Quét Mượt';
+        if (sweepInterval) {
+          clearInterval(sweepInterval);
+          sweepInterval = null;
+        }
+      }
+    }
+
+    btnAutoSweep.addEventListener('click', () => {
+      if (isAutoSweeping) {
+        stopAutoSweep();
+      } else {
+        startAutoSweep();
+      }
+    });
+
+    // Initial setup
+    applyValue(50);
+  </script>
+</body>
+</html>

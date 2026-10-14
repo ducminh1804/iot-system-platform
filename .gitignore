@@ -35,3 +35,4 @@ dist-ssr/
 *.tsbuildinfo
 .vite/
 coverage/
+.agents/*
