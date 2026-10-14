@@ -4,8 +4,8 @@
  * Landmark-based ultra-smooth physics animation
  */
 
-import React, { useState, useEffect, useRef, useId } from 'react';
-import { Play, Pause, RotateCcw, Zap, ShieldCheck, AlertTriangle, Flame } from 'lucide-react';
+import React, { useState, useEffect, useRef, useId, useCallback } from 'react';
+import { Play, Pause, ShieldCheck, AlertTriangle, Flame } from 'lucide-react';
 
 export interface GaugeLandmark {
   id: string;
@@ -40,6 +40,8 @@ export interface SpeedometerGaugeProps {
   /** Tên đơn vị đo hiển thị (vd: 'mH₂O', 'kW', '%', 'Bar') */
   unit?: string;
   className?: string;
+  /** Kiểu hiển thị: 'card' (có viền card nền trắng/tối) hoặc 'embedded' (trong suốt để nhúng vào card khác) */
+  variant?: 'card' | 'embedded';
 }
 
 export const SpeedometerGauge: React.FC<SpeedometerGaugeProps> = ({
@@ -51,6 +53,7 @@ export const SpeedometerGauge: React.FC<SpeedometerGaugeProps> = ({
   easingStyle = 'spring',
   unit = '%',
   className = '',
+  variant = 'card',
 }) => {
   const [currentVal, setCurrentVal] = useState<number>(value);
   const [isAutoSweeping, setIsAutoSweeping] = useState<boolean>(false);
@@ -143,8 +146,12 @@ export const SpeedometerGauge: React.FC<SpeedometerGaugeProps> = ({
 
   return (
     <div
-      className={`flex flex-col items-center p-3.5 sm:p-5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 shadow-[0_12px_40px_rgba(0,0,0,0.08)] select-none transition-all w-full ${className}`}
-      style={{ maxWidth: size + 60 }}
+      className={
+        variant === 'embedded'
+          ? `flex flex-col items-center w-full select-none ${className}`
+          : `flex flex-col items-center p-3.5 sm:p-5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 shadow-[0_12px_40px_rgba(0,0,0,0.08)] select-none transition-all w-full ${className}`
+      }
+      style={{ maxWidth: variant === 'embedded' ? size : size + 60 }}
     >
       {/* SVG Speedometer Gauge Canvas - Khớp 100% hình mẫu tham chiếu & 100% GPU Accelerated */}
       <div

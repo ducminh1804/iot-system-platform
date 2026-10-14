@@ -50,6 +50,15 @@ export interface TurbineTelemetry {
   };
 }
 
+export interface HydrolixOutletContext {
+  turbineData: TurbineTelemetry;
+  viewportMode: 'camera' | 'model';
+  handlePrevTurbine: () => void;
+  handleNextTurbine: () => void;
+  selectedTurbineId: string;
+  handleSelectTurbine: (id: string) => void;
+}
+
 export const MOCK_TURBINES: TurbineTelemetry[] = [
   {
     id: 'T-05',

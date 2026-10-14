@@ -8,5 +8,15 @@
     "source": "design-inspiration/image copy.png",
     "nav": "N3-Side-rail",
     "footer": "none"
+  },
+  {
+    "date": "2026-10-14",
+    "macrostructure": "Workbench-Matrix",
+    "theme": "Hydrolix-DeepTeal-Cobalt",
+    "enrichment": "3-Stage Dynamic Speedometer Gauges + Differential Pressure + Live Kinematics",
+    "brief": "Hydraulic Valve Controller 1015 · 4-Slot Telemetry Redesign with 3-Stage Gauge & Spare Slot",
+    "source": "User attached image",
+    "nav": "N3-Side-rail",
+    "footer": "none"
   }
 ]

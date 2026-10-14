@@ -1,7 +1,8 @@
 import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutGrid,
-  Fan,
+  Cpu,
   BarChart3,
   AlertTriangle,
   FileText,
@@ -12,13 +13,13 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export interface HydrolixSidebarProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
 const NAV_ITEMS = [
-  { id: 'dashboard', label: 'Overview Dashboard', icon: LayoutGrid },
-  { id: 'fleet', label: 'Turbine Fleet', icon: Fan },
+  { id: 'dashboard', label: 'Overview Dashboard', icon: LayoutGrid, path: '/' },
+  { id: 'device', label: 'Device', icon: Cpu, path: '/device' },
   { id: 'analytics', label: 'Power & Telemetry Analytics', icon: BarChart3 },
   { id: 'alarms', label: 'System Alarms (1 Active)', icon: AlertTriangle, hasBadge: true },
   { id: 'logs', label: 'Operational Logs', icon: FileText },
@@ -30,6 +31,26 @@ export const HydrolixSidebar: React.FC<HydrolixSidebarProps> = ({
   activeTab,
   onTabChange,
 }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const isItemActive = (item: (typeof NAV_ITEMS)[number]) => {
+    if (item.path) {
+      if (item.path === '/') {
+        return location.pathname === '/';
+      }
+      return location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+    }
+    return activeTab === item.id;
+  };
+
+  const handleItemClick = (item: (typeof NAV_ITEMS)[number]) => {
+    if (item.path) {
+      navigate(item.path);
+    }
+    onTabChange?.(item.id);
+  };
+
   return (
     <aside
       aria-label="Sidebar Navigation"
@@ -38,14 +59,14 @@ export const HydrolixSidebar: React.FC<HydrolixSidebarProps> = ({
       <div className="flex flex-col items-center gap-3">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
-          const isActive = activeTab === item.id;
+          const isActive = isItemActive(item);
 
           return (
             <Tooltip key={item.id} delayDuration={150}>
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  onClick={() => onTabChange(item.id)}
+                  onClick={() => handleItemClick(item)}
                   aria-label={item.label}
                   className={`relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                     isActive
