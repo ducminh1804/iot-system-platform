@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Radio,
   Clock,
@@ -60,15 +61,14 @@ const VALVE_CONFIGS: ValveConfig[] = [
 ];
 
 export const DevicePage: React.FC = () => {
+  const navigate = useNavigate();
+
   // Trạng thái bật/tắt của từng van: false = Tắt (0%), true = Bật (Max tương ứng)
   const [valveStates, setValveStates] = useState<{ [key: number]: boolean }>({
     1: false,
     2: true, // Mức 2 mở mặc định
     3: false,
   });
-
-  // Chế độ vận hành: Thủ công / Tự động
-  const [operationMode, setOperationMode] = useState<'THỦ CÔNG' | 'TỰ ĐỘNG'>('THỦ CÔNG');
 
   // Trạng thái trực tuyến của thiết bị: true = Online, false = Offline
   const [isOnline, setIsOnline] = useState(true);
@@ -301,26 +301,13 @@ export const DevicePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Bên phải: Chế độ & Nút cấu hình */}
+        {/* Bên phải: Nút cấu hình cài đặt */}
         <div className="flex items-center justify-end gap-2 flex-1 min-w-0">
           <button
             type="button"
-            onClick={() => {
-              const next = operationMode === 'THỦ CÔNG' ? 'TỰ ĐỘNG' : 'THỦ CÔNG';
-              setOperationMode(next);
-              toast.info(`Chế độ vận hành: ${next}`);
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/70 hover:bg-slate-900 text-slate-200 border border-white/10 text-xs font-semibold transition-all"
-          >
-            <SlidersHorizontal className="w-3 h-3 text-amber-400" />
-            <span>{operationMode}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => toast.success('Mở bảng cấu hình thiết bị 1015')}
-            className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-900/70 hover:bg-slate-900 text-slate-200 hover:text-white border border-white/10 hover:border-emerald-400/40 transition-all active:scale-95 shadow-sm group"
-            title="Cấu hình thiết bị"
+            onClick={() => navigate('/settings')}
+            className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-900/70 hover:bg-slate-900 text-slate-200 hover:text-white border border-white/10 hover:border-emerald-400/40 transition-all active:scale-95 shadow-sm group cursor-pointer"
+            title="Cài đặt hệ thống & cấu hình thiết bị 1015"
           >
             <Settings className="w-3.5 h-3.5 text-emerald-400 group-hover:rotate-45 transition-transform duration-300" />
           </button>

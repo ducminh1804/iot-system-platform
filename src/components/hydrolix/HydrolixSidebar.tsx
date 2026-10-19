@@ -24,7 +24,7 @@ const NAV_ITEMS = [
   { id: 'alarms', label: 'System Alarms (1 Active)', icon: AlertTriangle, hasBadge: true },
   { id: 'logs', label: 'Operational Logs', icon: FileText },
   { id: 'diagnostics', label: 'Subsystem Diagnostics', icon: Info },
-  { id: 'settings', label: 'System Configuration', icon: Settings },
+  { id: 'settings', label: 'Cài Đặt & Cấu Hình', icon: Settings, path: '/settings' },
 ];
 
 export const HydrolixSidebar: React.FC<HydrolixSidebarProps> = ({
