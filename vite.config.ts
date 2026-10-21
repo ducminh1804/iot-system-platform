@@ -15,7 +15,7 @@ export default defineConfig({
       includeAssets: ['favicon.svg', 'pwa-icon.svg'],
       manifest: {
         name: 'IoT System Platform',
-        short_name: 'IoT System',
+        short_name: 'IoT System Platform',
         description: 'Hệ thống giám sát và điều khiển thiết bị IoT thông minh thời gian thực',
         theme_color: '#09090b',
         background_color: '#09090b',
