@@ -4,6 +4,7 @@ import {
   PressureStationConfig,
   ActivePressureLevel,
   DEFAULT_PRESSURE_CONFIG,
+  StationMetaInfo,
   formatVNNumber,
   PressureControlHeader,
   PressureLevelControls,
@@ -18,6 +19,13 @@ interface PressureControlDetailViewProps {
 }
 
 export function PressureControlDetailView({ onBack }: PressureControlDetailViewProps) {
+  // Thông tin định danh trạm (Tên - ID - Version)
+  const [stationMeta, setStationMeta] = useState<StationMetaInfo>({
+    name: 'Thiết bị điều khiển áp lực',
+    stationId: '1015',
+    version: 'version 1',
+  });
+
   // Trạng thái hiển thị modal cài đặt
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
@@ -141,9 +149,12 @@ export function PressureControlDetailView({ onBack }: PressureControlDetailViewP
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col justify-between min-h-0 select-none overflow-hidden space-y-2.5 sm:space-y-3">
+    <div className="relative w-full h-full flex flex-col justify-between min-h-0 select-none overflow-hidden space-y-1.5 sm:space-y-2.5 lg:space-y-3">
       {/* 1. TOP HEADER BAR */}
       <PressureControlHeader
+        stationName={stationMeta.name}
+        stationId={stationMeta.stationId}
+        version={stationMeta.version}
         ratio0={config.ratio0}
         ratio90={config.ratio90}
         isSettingsOpen={isSettingsOpen}
@@ -153,7 +164,7 @@ export function PressureControlDetailView({ onBack }: PressureControlDetailViewP
 
       {/* 2. MAIN MONITOR VIEW */}
       <div className="relative flex-1 min-h-0 w-full overflow-hidden">
-        <div className="w-full h-full flex flex-col justify-between space-y-2.5 sm:space-y-3">
+        <div className="w-full h-full flex flex-col justify-between space-y-1.5 sm:space-y-2.5 lg:space-y-3">
           {/* Middle Row: 3 Gauges + Water Shutoff Card */}
           <PressureLevelControls
             activeLevel={activeLevel}
@@ -180,6 +191,8 @@ export function PressureControlDetailView({ onBack }: PressureControlDetailViewP
       {/* 3. SETTINGS MODAL CENTERED DIALOG */}
       <PressureSettingsModal
         isOpen={isSettingsOpen}
+        stationMeta={stationMeta}
+        onUpdateStationMeta={setStationMeta}
         config={config}
         rtcTime={rtcTime}
         onChangeConfig={setConfig}

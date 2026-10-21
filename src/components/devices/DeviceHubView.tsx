@@ -139,9 +139,65 @@ export function DeviceHubView() {
 
   return (
     <div className="w-full h-full flex flex-col min-h-0 select-none">
-      {/* 1. TOP FILTER BAR (Style as Image 1) - Clear, legible typography & 100% Vietnamese */}
-      <div className="shrink-0 w-full bg-white dark:bg-[#14171F] rounded-[20px] sm:rounded-[22px] border border-slate-200/90 dark:border-slate-800/80 px-4 py-3 sm:py-3.5 shadow-xs mb-3.5 sm:mb-4 transition-colors">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 items-end">
+      {/* 1. TOP FILTER BAR - Gọn gàng trên mobile, đầy đủ trên desktop */}
+      <div className="shrink-0 w-full bg-white dark:bg-[#14171F] rounded-[18px] sm:rounded-[22px] border border-slate-200/90 dark:border-slate-800/80 p-3 sm:px-4 sm:py-3.5 shadow-xs mb-3 sm:mb-4 transition-colors">
+        {/* Mobile View (< sm): 2 dòng siêu gọn gàng */}
+        <div className="flex flex-col gap-2 sm:hidden">
+          {/* Dòng 1: Tìm kiếm + Nút Tìm */}
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Tìm kiếm thiết bị..."
+              className="flex-1 h-9 px-3 rounded-xl bg-slate-50 dark:bg-[#1C212B] border border-slate-200/80 dark:border-slate-700/60 text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-medium"
+            />
+            <button
+              type="button"
+              onClick={() => toast.info(`Tìm thấy ${filteredDevices.length} thiết bị phù hợp`)}
+              className="h-9 px-3.5 rounded-xl bg-black hover:bg-slate-800 dark:bg-white dark:text-black text-white font-bold text-xs flex items-center justify-center gap-1.5 shrink-0 active:scale-95 transition-transform"
+            >
+              <Search className="w-3.5 h-3.5" />
+              <span>Tìm</span>
+            </button>
+          </div>
+
+          {/* Dòng 2: 3 dropdowns hàng ngang 3 cột */}
+          <div className="grid grid-cols-3 gap-1.5">
+            <select
+              value={selectedArea}
+              onChange={(e) => setSelectedArea(e.target.value)}
+              className="w-full h-8 px-1.5 rounded-lg bg-slate-50 dark:bg-[#1C212B] border border-slate-200/80 dark:border-slate-700/60 text-[11px] text-slate-800 dark:text-slate-100 font-medium truncate"
+            >
+              <option value="all">Khu vực: Tất cả</option>
+              <option value="Khu Vực Bắc TP">Bắc TP</option>
+              <option value="Khu Vực Nam TP">Nam TP</option>
+              <option value="Khu Vực Đông">Khu Đông</option>
+            </select>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="w-full h-8 px-1.5 rounded-lg bg-slate-50 dark:bg-[#1C212B] border border-slate-200/80 dark:border-slate-700/60 text-[11px] text-slate-800 dark:text-slate-100 font-medium truncate"
+            >
+              <option value="all">Trạng thái: Tất cả</option>
+              <option value="active">Hoạt động</option>
+              <option value="maintenance">Bảo trì</option>
+            </select>
+            <select
+              value={selectedVersion}
+              onChange={(e) => setSelectedVersion(e.target.value)}
+              className="w-full h-8 px-1.5 rounded-lg bg-slate-50 dark:bg-[#1C212B] border border-slate-200/80 dark:border-slate-700/60 text-[11px] text-slate-800 dark:text-slate-100 font-medium truncate"
+            >
+              <option value="all">Phiên bản: Tất cả</option>
+              <option value="v3">v3.x</option>
+              <option value="v2">v2.x</option>
+              <option value="v1">v1.x</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Tablet & Desktop View (>= sm): Grid 5 cột đầy đủ */}
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 items-end">
           {/* Field 1: Tên thiết bị / Từ khóa */}
           <div className="lg:col-span-1">
             <label className="text-xs sm:text-[13px] font-semibold text-slate-800 dark:text-slate-200 mb-1.5 block">
@@ -220,69 +276,69 @@ export function DeviceHubView() {
         </div>
       </div>
 
-      {/* 2. DEVICE CARDS GRID (Card style as Image 2) - Balanced proportions with zero empty void */}
+      {/* 2. DEVICE CARDS GRID - Co giãn tự nhiên, không bị bóp nghẹt trên mobile */}
       {filteredDevices.length > 0 ? (
-        <div className="flex-1 min-h-0 max-h-[520px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 lg:grid-rows-2 gap-3 sm:gap-4 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden lg:max-h-[540px] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:grid-rows-2 gap-2.5 sm:gap-4 pb-6 lg:pb-0 pr-0.5">
           {filteredDevices.map((card) => {
             return (
               <div
                 key={card.id}
                 onClick={() => handleCardClick(card.id)}
-                className="h-full rounded-[22px] sm:rounded-[24px] bg-white dark:bg-[#13161F] border border-slate-200/90 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700/80 hover:bg-slate-50/60 dark:hover:bg-[#171B26] p-4 sm:p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)] transition-all duration-200 cursor-pointer flex flex-col justify-between group overflow-hidden"
+                className="h-auto lg:h-full min-h-[135px] sm:min-h-[155px] rounded-[18px] sm:rounded-[24px] bg-white dark:bg-[#13161F] border border-slate-200/90 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700/80 hover:bg-slate-50/60 dark:hover:bg-[#171B26] p-3.5 sm:p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)] transition-all duration-200 cursor-pointer flex flex-col justify-between group overflow-hidden"
               >
                 {/* Top Section: Title & Status Badge */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 pr-2">
-                    <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <div className="flex items-start justify-between gap-2 sm:gap-3">
+                  <div className="min-w-0 pr-1">
+                    <h3 className="text-sm sm:text-base lg:text-lg font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
                       {card.title}
                     </h3>
-                    <p className="text-[11px] font-mono text-slate-400 dark:text-slate-500 mt-1">
+                    <p className="text-[10px] sm:text-[11px] font-mono text-slate-400 dark:text-slate-500 mt-0.5">
                       {card.code}
                     </p>
                   </div>
 
-                  {/* Top-right pill badge (like "Up to 10% APY" in Image 2) */}
-                  <div className="px-3 py-1 rounded-xl text-xs font-semibold bg-emerald-500/10 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 group-hover:border-emerald-500/40 shrink-0 transition-colors">
+                  {/* Top-right pill badge */}
+                  <div className="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold bg-emerald-500/10 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 group-hover:border-emerald-500/40 shrink-0 transition-colors">
                     {card.status}
                   </div>
                 </div>
 
-                {/* Bottom Recessed Container with Signature Diagonal Chamfer Corner (Image 2 style) - Fills space seamlessly */}
+                {/* Bottom Recessed Container with Signature Diagonal Chamfer Corner */}
                 <div
-                  className="flex-1 min-h-[96px] mt-3 p-3.5 sm:p-4 rounded-[18px] bg-slate-50/90 dark:bg-[#1A202C] border border-slate-200/60 dark:border-slate-800/80 group-hover:border-slate-300/80 dark:group-hover:border-slate-700/80 group-hover:bg-slate-100/80 dark:group-hover:bg-[#1E2536] transition-colors flex flex-col justify-between"
+                  className="flex-1 min-h-[76px] sm:min-h-[90px] mt-2 sm:mt-3 p-2.5 sm:p-4 rounded-[14px] sm:rounded-[18px] bg-slate-50/90 dark:bg-[#1A202C] border border-slate-200/60 dark:border-slate-800/80 group-hover:border-slate-300/80 dark:group-hover:border-slate-700/80 group-hover:bg-slate-100/80 dark:group-hover:bg-[#1E2536] transition-colors flex flex-col justify-between"
                   style={{
                     clipPath:
-                      'polygon(0 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%)',
+                      'polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%)',
                   }}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-400">
+                    <span className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400">
                       Số thiết bị khả dụng
                     </span>
-                    <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
+                    <span className="text-[10px] sm:text-[11px] font-mono text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-semibold">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                       {card.count}/{card.count} Online
                     </span>
                   </div>
 
-                  <div className="flex items-baseline justify-between gap-2 pt-2">
+                  <div className="flex items-baseline justify-between gap-2 pt-1.5 sm:pt-2">
                     {/* Big number metric */}
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white font-mono tracking-tight leading-none">
+                    <div className="flex items-baseline gap-1 sm:gap-1.5">
+                      <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white font-mono tracking-tight leading-none">
                         {card.count}
                       </span>
-                      <span className="text-xs text-slate-400 font-medium">
+                      <span className="text-[11px] sm:text-xs text-slate-400 font-medium">
                         {card.unit}
                       </span>
                     </div>
 
-                    {/* Version Badge Pill (like ACME badge in Image 2) */}
-                    <div className="px-3.5 py-1.5 rounded-full bg-white dark:bg-[#283142] border border-slate-200/80 dark:border-slate-700/60 group-hover:border-slate-300 dark:group-hover:border-slate-600 group-hover:bg-slate-50 dark:group-hover:bg-[#303B4E] flex items-center gap-2 shadow-2xs shrink-0 transition-colors">
+                    {/* Version Badge Pill */}
+                    <div className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-full bg-white dark:bg-[#283142] border border-slate-200/80 dark:border-slate-700/60 group-hover:border-slate-300 dark:group-hover:border-slate-600 group-hover:bg-slate-50 dark:group-hover:bg-[#303B4E] flex items-center gap-1.5 sm:gap-2 shadow-2xs shrink-0 transition-colors">
                       <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs"
+                        className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0 shadow-xs"
                         style={{ backgroundColor: card.dotColor }}
                       />
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono">
+                      <span className="text-[10px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 font-mono">
                         {card.version}
                       </span>
                     </div>

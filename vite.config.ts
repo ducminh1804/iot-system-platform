@@ -7,6 +7,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 // https://vite.dev/config/
 export default defineConfig({
   base: '/iot-system-platform/',
+  server: {
+    host: true, // Tự động mở IP mạng LAN (0.0.0.0)
+    port: 5173,
+  },
   plugins: [
     react(),
     tailwindcss(),

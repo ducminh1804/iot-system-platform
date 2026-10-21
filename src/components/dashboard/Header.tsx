@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Bell, Moon, Sun, X, LogOut, User, Settings as SettingsIcon } from 'lucide-react';
+import { Search, Bell, Moon, Sun, X, LogOut, User, Settings as SettingsIcon, Menu } from 'lucide-react';
 import { useAppStore } from '@/stores/useAppStore';
 import {
   DropdownMenu,
@@ -12,9 +12,14 @@ import {
 interface HeaderProps {
   title?: string;
   onSearchChange?: (val: string) => void;
+  onOpenMobileMenu?: () => void;
 }
 
-export function Header({ title = 'Revenue Analytics', onSearchChange }: HeaderProps) {
+export function Header({
+  title = 'Revenue Analytics',
+  onSearchChange,
+  onOpenMobileMenu,
+}: HeaderProps) {
   const { theme, setTheme } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [hasUnread, setHasUnread] = useState(true);
@@ -30,18 +35,28 @@ export function Header({ title = 'Revenue Analytics', onSearchChange }: HeaderPr
   ];
 
   return (
-    <header className="w-full flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
-      {/* Title */}
-      <div>
-        <h1 className="text-xl sm:text-[24px] lg:text-[26px] font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
+    <header className="w-full flex items-center justify-between gap-2.5 sm:gap-4">
+      {/* Title & Mobile Menu Button */}
+      <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
+        {onOpenMobileMenu && (
+          <button
+            type="button"
+            onClick={onOpenMobileMenu}
+            className="md:hidden p-1.5 sm:p-2 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#151A24] text-slate-700 dark:text-slate-200 shadow-2xs active:scale-95 transition-transform shrink-0 cursor-pointer"
+            title="Menu"
+          >
+            <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+        )}
+        <h1 className="text-base sm:text-xl lg:text-[24px] font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight truncate">
           {title}
         </h1>
       </div>
 
       {/* Right Controls: Search, Notification, Theme Toggle, Profile */}
-      <div className="flex items-center gap-3">
-        {/* Search Bar */}
-        <div className="relative flex-1 sm:w-64 md:w-72">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Search Bar - hiện trên desktop md trở lên */}
+        <div className="hidden md:block relative w-52 lg:w-72">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <input
             type="text"
@@ -77,12 +92,12 @@ export function Header({ title = 'Revenue Analytics', onSearchChange }: HeaderPr
             <button
               type="button"
               onClick={() => setHasUnread(false)}
-              className="relative w-10 h-10 rounded-full bg-white dark:bg-[#151A24] border border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-all duration-200 shadow-2xs flex items-center justify-center cursor-pointer active:scale-95"
+              className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white dark:bg-[#151A24] border border-slate-200/80 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-all duration-200 shadow-2xs flex items-center justify-center cursor-pointer active:scale-95 shrink-0"
               title="Notifications"
             >
-              <Bell className="w-4 h-4" />
+              <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               {hasUnread && (
-                <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-blue-600 ring-2 ring-white dark:ring-[#151A24] animate-pulse" />
+                <span className="absolute top-2 sm:top-2.5 right-2 sm:right-2.5 w-2 h-2 rounded-full bg-blue-600 ring-2 ring-white dark:ring-[#151A24] animate-pulse" />
               )}
             </button>
           </DropdownMenuTrigger>
@@ -110,7 +125,7 @@ export function Header({ title = 'Revenue Analytics', onSearchChange }: HeaderPr
         </DropdownMenu>
 
         {/* Theme Toggle Button (Moon & Sun) */}
-        <div className="flex items-center h-10 p-1 rounded-full bg-white dark:bg-[#151A24] border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+        <div className="flex items-center h-9 sm:h-10 p-0.5 sm:p-1 rounded-full bg-white dark:bg-[#151A24] border border-slate-200/80 dark:border-slate-800 shadow-2xs shrink-0">
           <button
             type="button"
             onClick={toggleTheme}
@@ -142,7 +157,7 @@ export function Header({ title = 'Revenue Analytics', onSearchChange }: HeaderPr
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="relative w-10 h-10 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700 hover:opacity-95 transition-all shadow-2xs active:scale-95 shrink-0"
+              className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700 hover:opacity-95 transition-all shadow-2xs active:scale-95 shrink-0"
             >
               <img
                 src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"

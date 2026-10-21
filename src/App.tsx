@@ -7,7 +7,7 @@ import { RevenueGrowthCard } from '@/components/dashboard/RevenueGrowthCard';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from 'sonner';
 import { TimeRange } from '@/types/dashboard';
-import { Menu, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 import { DeviceHubView } from '@/components/devices/DeviceHubView';
 
@@ -77,30 +77,18 @@ function DashboardLayout() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Fixed Top Header Container */}
-        <div className="shrink-0 z-20 px-4 sm:px-6 md:px-8 lg:px-10 py-3 sm:py-3.5 bg-[#F4F5F7]/95 dark:bg-[#0E131C]/95 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 transition-colors">
-          {/* Mobile Top Bar */}
-          <div className="flex md:hidden items-center justify-between pb-2 mb-2 border-b border-slate-200/80 dark:border-slate-800">
-            <button
-              type="button"
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#161B24] text-slate-700 dark:text-slate-200 shadow-xs active:scale-95 transition-transform cursor-pointer"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <span className="font-bold text-sm text-slate-900 dark:text-white">
-              {pageTitle}
-            </span>
-          </div>
-
-          {/* Fixed Header Bar */}
-          <Header title={pageTitle} />
+        <div className="shrink-0 z-20 px-3 sm:px-6 md:px-8 lg:px-10 py-2 sm:py-3 bg-[#F4F5F7]/95 dark:bg-[#0E131C]/95 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 transition-colors">
+          <Header
+            title={pageTitle}
+            onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
+          />
         </div>
 
-        {/* Main Content Canvas - No scroll on devices screen */}
+        {/* Main Content Canvas - Cho phép cuộn trên mobile, cố định trên desktop lg */}
         <div
           className={`flex-1 min-h-0 ${
             activeNavItem === 'devices'
-              ? 'h-full overflow-hidden px-4 sm:px-6 lg:px-8 py-3 sm:py-3.5 flex flex-col'
+              ? 'h-full overflow-y-auto lg:overflow-hidden px-2.5 sm:px-6 lg:px-8 py-1.5 sm:py-3.5 flex flex-col'
               : 'overflow-y-auto overflow-x-hidden px-5 sm:px-7 md:px-8 lg:px-10 py-5 sm:py-6'
           }`}
         >

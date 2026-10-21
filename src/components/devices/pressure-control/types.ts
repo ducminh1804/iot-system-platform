@@ -1,3 +1,9 @@
+export interface StationMetaInfo {
+  name: string;
+  stationId: string;
+  version: string;
+}
+
 export interface PressureStationConfig {
   targetP1: number;
   targetP2: number;
