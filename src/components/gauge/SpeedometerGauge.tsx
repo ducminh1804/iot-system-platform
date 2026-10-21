@@ -316,7 +316,7 @@ export const SpeedometerGauge: React.FC<SpeedometerGaugeProps> = ({
         <div className="flex flex-col items-center mt-3 text-center">
           <div className="flex items-baseline gap-1.5 font-sans">
             <span className={`text-3xl font-extrabold tracking-tight tabular-nums transition-colors ${isOff ? 'text-slate-400' : 'text-slate-900 dark:text-white'}`}>
-              {currentVal.toFixed(1)}
+              {currentVal.toFixed(1).replace('.', ',')}
             </span>
             <span className="text-sm font-semibold text-slate-400">{unit}</span>
           </div>
@@ -365,7 +365,7 @@ export const SpeedometerGauge: React.FC<SpeedometerGaugeProps> = ({
               )}
             </span>
             <span className="text-[11px] text-slate-400 font-mono">
-              Góc: {needleAngle > 0 ? `+${needleAngle.toFixed(1)}` : needleAngle.toFixed(1)}°
+              Góc: {needleAngle > 0 ? `+${needleAngle.toFixed(1).replace('.', ',')}` : needleAngle.toFixed(1).replace('.', ',')}°
             </span>
           </div>
         </div>
