@@ -31,14 +31,64 @@ export interface LoggerBatteryConfig {
 export type PulseUnitType = 'liter_per_pulse' | 'pulse_per_m3' | 'm3_per_pulse';
 
 export interface PulseMeterConfig {
-  pulsesPerUnit: number; // Hệ số xung (VD: 10 L/xung hoặc 100 xung/m3)
-  pulseUnit: PulseUnitType; // Đơn vị hệ số xung
-  flowRateUnit: 'm3_h' | 'l_s'; // Đơn vị lưu lượng
-  netFlowTotal: number; // Tổng lưu lượng tích lũy Net (m³)
-  forwardFlow: number; // Tổng lưu lượng chiều thuận (m³)
-  reserveFlow: number; // Tổng lưu lượng chiều nghịch (m³)
+  pulsesPerUnit: number; // Pluses per unit volume (p/m³)
+  pulseUnit?: PulseUnitType; // Đơn vị hệ số xung
+  flowRate: number; // Flow Rate (m³/h)
+  flowRateUnit?: 'm3_h' | 'l_s'; // Đơn vị lưu lượng
+  netFlowTotal: number; // Net Flow Total (m³)
+  forwardFlow: number; // Forward Flow (m³)
+  reserveFlow: number; // Reserve Flow (m³)
   debounceFilterMs?: number; // Lọc dội xung (ms)
   cutoffMinFlowRate?: number; // Lưu lượng cắt điểm 0 (m³/h)
+}
+
+export interface CalibrationLevelConfig {
+  value: number; // Giá trị áp suất (bar)
+  enabled?: boolean; // Cho mức áp 2 tùy chọn
+  rawAdc?: number; // ADC thô / mV nếu cần
+}
+
+export interface SensorCalibrationConfig {
+  rangeMin: number; // Min dải đo (VD: 0)
+  rangeMax: number; // Max dải đo (VD: 10)
+  unit: string; // 'bar' | 'mH2O' | 'psi'
+  level0: CalibrationLevelConfig; // Mức áp 0
+  level1: CalibrationLevelConfig; // Mức áp 1 (Bắt buộc)
+  level2: CalibrationLevelConfig; // Mức áp 2 (Tùy chọn)
+}
+
+export interface FlowAlarmConfig {
+  highFlowEnabled: boolean; // Cảnh báo lưu lượng cao (vỡ ống)
+  highFlowThreshold: number; // Ngưỡng cao (m³/h)
+  highFlowDelaySeconds: number; // Thời gian trễ (giây)
+  autoShutoffOnHighFlow: boolean; // Tự động đóng van khi vỡ ống
+
+  lowFlowEnabled: boolean; // Cảnh báo lưu lượng thấp
+  lowFlowThreshold: number; // Ngưỡng thấp (m³/h)
+  lowFlowDelaySeconds: number; // Thời gian trễ (giây)
+
+  reverseFlowEnabled: boolean; // Cảnh báo dòng chảy ngược
+  reverseFlowThreshold: number; // Ngưỡng chảy ngược (m³/h)
+
+  nightLeakageEnabled: boolean; // Cảnh báo rò rỉ đêm (MNF)
+  nightStartHour: number; // Giờ bắt đầu (0-23)
+  nightEndHour: number; // Giờ kết thúc (0-23)
+  nightFlowThreshold: number; // Ngưỡng rò rỉ đêm (m³/h)
+
+  notifyServer: boolean; // Gửi cảnh báo về server
+  serverProtocol?: ServerAlertProtocol; // mqtt | http | scada
+  alertRepeatMinutes: number; // Chu kỳ nhắc lại (phút)
+}
+
+export interface AnomalyAlarmConfig {
+  enabled: boolean; // Bật/tắt cảnh báo bất thường
+  globalApply: boolean; // Nút gạt áp dụng chung cho tất cả thiết bị
+  learningDaysRequired: number; // Mặc định 7 ngày thu thập dữ liệu
+  learningDaysCompleted: number; // Tiến độ học thực tế (0 - 7 ngày)
+  flowDeviationPercent: number; // % sai lệch lưu lượng so với data quá khứ (VD: 25%)
+  pressureDeviationPercent: number; // % sai lệch áp suất so với data quá khứ (VD: 20%)
+  ignoreDays: number[]; // Các ngày không quan sát dữ liệu (0: CN, 1: T2, ..., 6: T7)
+  lastResetTime?: string; // Thời điểm reset gần nhất
 }
 
 export interface PressureStationConfig {
@@ -60,6 +110,9 @@ export interface PressureStationConfig {
   solarBattery?: SolarBatteryConfig;
   loggerBattery?: LoggerBatteryConfig;
   pulseMeter?: PulseMeterConfig;
+  sensorCalibration?: SensorCalibrationConfig;
+  flowAlarm?: FlowAlarmConfig;
+  anomalyAlarm?: AnomalyAlarmConfig;
 }
 
 export type ActivePressureLevel = 0 | 1 | 2 | 3;

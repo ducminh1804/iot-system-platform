@@ -4,12 +4,13 @@ import {
   X,
   Pencil,
   Check,
-  ShieldAlert,
   CalendarClock,
   Gauge,
   Activity,
   Cpu,
   Droplets,
+  Waves,
+  Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PressureStationConfig, StationMetaInfo } from './types';
@@ -17,11 +18,14 @@ import { DEFAULT_PRESSURE_CONFIG } from './utils';
 import { ControlMechanismTab } from './tabs/ControlMechanismTab';
 import { AlarmsTab } from './tabs/AlarmsTab';
 import { PulseMeterTab } from './tabs/PulseMeterTab';
+import { SensorCalibrationTab } from './tabs/SensorCalibrationTab';
+import { FlowAlarmTab } from './tabs/FlowAlarmTab';
 import { WaveTabs, WaveTabItem } from './WaveTabs';
 
 export type SettingsTabId =
   | 'control'
   | 'pulse_meter'
+  | 'flow_alarms'
   | 'alarms'
   | 'schedule'
   | 'calibration'
@@ -31,9 +35,10 @@ export type SettingsTabId =
 const SETTINGS_TABS: WaveTabItem<SettingsTabId>[] = [
   { id: 'control', label: 'Cơ chế điều khiển', icon: SlidersHorizontal, accentColor: 'text-orange-500' },
   { id: 'pulse_meter', label: 'Đồng hồ xung', icon: Droplets, accentColor: 'text-blue-500' },
-  { id: 'alarms', label: 'Ngưỡng & Cảnh báo', icon: ShieldAlert, accentColor: 'text-rose-500' },
+  { id: 'flow_alarms', label: 'Cảnh báo lưu lượng', icon: Waves, accentColor: 'text-cyan-500' },
+  { id: 'alarms', label: 'Cảnh báo nguồn & Pin', icon: Zap, accentColor: 'text-amber-500' },
   { id: 'schedule', label: 'Lịch trình áp', icon: CalendarClock, accentColor: 'text-amber-500' },
-  { id: 'calibration', label: 'Hiệu chuẩn van', icon: Gauge, accentColor: 'text-indigo-500' },
+  { id: 'calibration', label: 'Calib cảm biến', icon: Gauge, accentColor: 'text-indigo-500' },
   { id: 'modbus', label: 'Truyền thông Modbus', icon: Activity, accentColor: 'text-emerald-500' },
   { id: 'system', label: 'Hệ thống & RTC', icon: Cpu, accentColor: 'text-cyan-500' },
 ];
@@ -46,6 +51,9 @@ interface PressureSettingsModalProps {
   rtcTime?: string;
   currentSolarVoltage?: number;
   currentLoggerVoltage?: number;
+  currentFlowRate?: number;
+  currentPressureIn?: number;
+  currentPressureOut?: number;
   onChangeConfig?: (updater: (prev: PressureStationConfig) => PressureStationConfig) => void;
   onSave?: () => void;
   onResetDefaults?: () => void;
@@ -64,6 +72,9 @@ export function PressureSettingsModal({
   config = DEFAULT_PRESSURE_CONFIG,
   currentSolarVoltage = 12.46,
   currentLoggerVoltage = 3.60,
+  currentFlowRate = 49.6,
+  currentPressureIn = 25.9,
+  currentPressureOut = 24.2,
   onChangeConfig = () => {},
   onSave,
   onClose,
@@ -293,6 +304,24 @@ export function PressureSettingsModal({
             />
           )}
 
+          {activeTab === 'pulse_meter' && (
+            <PulseMeterTab
+              config={config}
+              onChangeConfig={onChangeConfig}
+              onSave={onSave}
+              currentFlowRate={currentFlowRate}
+            />
+          )}
+
+          {activeTab === 'flow_alarms' && (
+            <FlowAlarmTab
+              config={config}
+              onChangeConfig={onChangeConfig}
+              onSave={onSave}
+              currentFlowRate={currentFlowRate}
+            />
+          )}
+
           {activeTab === 'alarms' && (
             <AlarmsTab
               config={config}
@@ -303,22 +332,35 @@ export function PressureSettingsModal({
             />
           )}
 
-          {activeTab !== 'control' && activeTab !== 'alarms' && (
-            <div className="flex-1 min-h-[300px] flex flex-col items-center justify-center p-8 text-center">
-              <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-blue-950/40 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4 shadow-xs">
-                {activeTab === 'schedule' && <CalendarClock className="w-8 h-8 text-amber-500" />}
-                {activeTab === 'calibration' && <Gauge className="w-8 h-8 text-indigo-500" />}
-                {activeTab === 'modbus' && <Activity className="w-8 h-8 text-emerald-500" />}
-                {activeTab === 'system' && <Cpu className="w-8 h-8 text-cyan-500" />}
-              </div>
-              <h4 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
-                {SETTINGS_TABS.find((t) => t.id === activeTab)?.label}
-              </h4>
-              <p className="text-xs sm:text-sm text-slate-400 max-w-md mt-1.5">
-                Tab này đã sẵn sàng. Bạn có thể yêu cầu thiết kế chi tiết các thông số cụ thể cho tab này bất cứ lúc nào!
-              </p>
-            </div>
+          {activeTab === 'calibration' && (
+            <SensorCalibrationTab
+              config={config}
+              onChangeConfig={onChangeConfig}
+              onSave={onSave}
+              currentPressureIn={currentPressureIn}
+              currentPressureOut={currentPressureOut}
+            />
           )}
+
+          {activeTab !== 'control' &&
+            activeTab !== 'pulse_meter' &&
+            activeTab !== 'flow_alarms' &&
+            activeTab !== 'alarms' &&
+            activeTab !== 'calibration' && (
+              <div className="flex-1 min-h-[300px] flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-blue-950/40 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4 shadow-xs">
+                  {activeTab === 'schedule' && <CalendarClock className="w-8 h-8 text-amber-500" />}
+                  {activeTab === 'modbus' && <Activity className="w-8 h-8 text-emerald-500" />}
+                  {activeTab === 'system' && <Cpu className="w-8 h-8 text-cyan-500" />}
+                </div>
+                <h4 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
+                  {SETTINGS_TABS.find((t) => t.id === activeTab)?.label}
+                </h4>
+                <p className="text-xs sm:text-sm text-slate-400 max-w-md mt-1.5">
+                  Tab này đã sẵn sàng. Bạn có thể yêu cầu thiết kế chi tiết các thông số cụ thể cho tab này bất cứ lúc nào!
+                </p>
+              </div>
+            )}
         </div>
       </div>
     </div>

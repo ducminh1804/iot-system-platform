@@ -199,6 +199,11 @@ export function PressureControlDetailView({ onBack }: PressureControlDetailViewP
         onUpdateStationMeta={setStationMeta}
         config={config}
         rtcTime={rtcTime}
+        currentFlowRate={currentFlowRate}
+        currentSolarVoltage={solarBatteryVoltage}
+        currentLoggerVoltage={loggerBatteryVoltage}
+        currentPressureIn={currentPressureIn}
+        currentPressureOut={currentPressureOut}
         onChangeConfig={setConfig}
         onSave={handleSaveSettings}
         onResetDefaults={handleResetDefaults}
