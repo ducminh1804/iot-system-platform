@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef } from 'react';
 
 export interface WaveTabItem<T extends string = string> {
   id: T;
@@ -11,7 +11,7 @@ export interface WaveTabItem<T extends string = string> {
 interface WaveTabsProps<T extends string> {
   tabs: WaveTabItem<T>[];
   activeId: T;
-  onChange: (id: T) => void;
+  onChange: (id: NoInfer<T>) => void;
 }
 
 /** Độ rộng của mỗi vai cong (S-curve) hai bên tab đang chọn */
@@ -22,11 +22,40 @@ const BAR_HEIGHT = 56;
  * Thanh tab lượn sóng: một khối trắng duy nhất trượt (transform + width)
  * tới tab đang chọn. Hai vai cong có kích thước cố định nên không bị méo,
  * phần giữa co giãn theo độ rộng tab.
+ * Tự động scroll mượt tab đang chọn vào vùng nhìn thấy (đặc biệt tối ưu trên mobile).
  */
 export function WaveTabs<T extends string>({ tabs, activeId, onChange }: WaveTabsProps<T>) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  // Tự động căn giữa tab được chọn trong thanh cuộn ngang khi trên màn hình hẹp (mobile)
+  const scrollToTab = (tabId: T, smooth = true) => {
+    const container = containerRef.current;
+    const btn = buttonRefs.current[tabId];
+    if (!container || !btn) return;
+
+    if (container.scrollWidth > container.clientWidth) {
+      const containerWidth = container.clientWidth;
+      const btnLeft = btn.offsetLeft;
+      const btnWidth = btn.offsetWidth;
+      const targetLeft = btnLeft - containerWidth / 2 + btnWidth / 2;
+
+      container.scrollTo({
+        left: Math.max(0, targetLeft),
+        behavior: smooth ? 'smooth' : 'auto',
+      });
+    }
+  };
+
+  useEffect(() => {
+    // Delay ngắn để đảm bảo render layout hoàn tất trước khi tính toán vị trí cuộn
+    const timer = setTimeout(() => {
+      scrollToTab(activeId, true);
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [activeId]);
 
   useLayoutEffect(() => {
     const place = () => {
@@ -49,8 +78,13 @@ export function WaveTabs<T extends string>({ tabs, activeId, onChange }: WaveTab
 
   return (
     <div
-      className="shrink-0 bg-blue-600 dark:bg-blue-700 overflow-x-auto overflow-y-hidden select-none"
-      style={{ height: BAR_HEIGHT, scrollbarWidth: 'none' }}
+      ref={containerRef}
+      className="shrink-0 bg-blue-600 dark:bg-blue-700 overflow-x-auto overflow-y-hidden select-none scroll-smooth"
+      style={{
+        height: BAR_HEIGHT,
+        scrollbarWidth: 'none',
+        WebkitOverflowScrolling: 'touch',
+      }}
       role="tablist"
     >
       <div
@@ -97,7 +131,10 @@ export function WaveTabs<T extends string>({ tabs, activeId, onChange }: WaveTab
               type="button"
               role="tab"
               aria-selected={isActive}
-              onClick={() => onChange(tab.id)}
+              onClick={() => {
+                onChange(tab.id);
+                scrollToTab(tab.id, true);
+              }}
               style={{ height: BAR_HEIGHT - 8 }}
               className={`relative z-10 shrink-0 flex items-center gap-2 px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap cursor-pointer transition-colors duration-200 ${
                 isActive

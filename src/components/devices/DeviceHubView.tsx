@@ -422,7 +422,7 @@ export function DeviceHubView() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => toast.success('Thao tác thành công')}
+                      onClick={() => toast.success('Đã gửi tín hiệu')}
                       className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition-transform"
                     >
                       <Send className="w-3.5 h-3.5" />

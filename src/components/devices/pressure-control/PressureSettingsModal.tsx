@@ -9,30 +9,28 @@ import {
   Gauge,
   Activity,
   Cpu,
+  Droplets,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PressureStationConfig, StationMetaInfo } from './types';
 import { DEFAULT_PRESSURE_CONFIG } from './utils';
 import { ControlMechanismTab } from './tabs/ControlMechanismTab';
-import { WaveTabs } from './WaveTabs';
+import { AlarmsTab } from './tabs/AlarmsTab';
+import { PulseMeterTab } from './tabs/PulseMeterTab';
+import { WaveTabs, WaveTabItem } from './WaveTabs';
 
 export type SettingsTabId =
   | 'control'
+  | 'pulse_meter'
   | 'alarms'
   | 'schedule'
   | 'calibration'
   | 'modbus'
   | 'system';
 
-interface TabItem {
-  id: SettingsTabId;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  accentColor: string;
-}
-
-const SETTINGS_TABS: TabItem[] = [
+const SETTINGS_TABS: WaveTabItem<SettingsTabId>[] = [
   { id: 'control', label: 'Cơ chế điều khiển', icon: SlidersHorizontal, accentColor: 'text-orange-500' },
+  { id: 'pulse_meter', label: 'Đồng hồ xung', icon: Droplets, accentColor: 'text-blue-500' },
   { id: 'alarms', label: 'Ngưỡng & Cảnh báo', icon: ShieldAlert, accentColor: 'text-rose-500' },
   { id: 'schedule', label: 'Lịch trình áp', icon: CalendarClock, accentColor: 'text-amber-500' },
   { id: 'calibration', label: 'Hiệu chuẩn van', icon: Gauge, accentColor: 'text-indigo-500' },
@@ -46,6 +44,8 @@ interface PressureSettingsModalProps {
   onUpdateStationMeta?: (meta: StationMetaInfo) => void;
   config?: PressureStationConfig;
   rtcTime?: string;
+  currentSolarVoltage?: number;
+  currentLoggerVoltage?: number;
   onChangeConfig?: (updater: (prev: PressureStationConfig) => PressureStationConfig) => void;
   onSave?: () => void;
   onResetDefaults?: () => void;
@@ -62,6 +62,8 @@ export function PressureSettingsModal({
   },
   onUpdateStationMeta,
   config = DEFAULT_PRESSURE_CONFIG,
+  currentSolarVoltage = 12.46,
+  currentLoggerVoltage = 3.60,
   onChangeConfig = () => {},
   onSave,
   onClose,
@@ -279,7 +281,7 @@ export function PressureSettingsModal({
         </div>
 
         {/* 2. Thanh tab lượn sóng: một khối trắng duy nhất trượt tới tab đang chọn */}
-        <WaveTabs tabs={SETTINGS_TABS} activeId={activeTab} onChange={setActiveTab} />
+        <WaveTabs tabs={SETTINGS_TABS} activeId={activeTab} onChange={(id) => setActiveTab(id)} />
 
         {/* 3. Modal Body: Nối liền mượt mà với chân tab đang chọn */}
         <div className="flex-1 min-h-0 bg-white dark:bg-[#12151E] overflow-y-auto p-4 sm:p-6 lg:p-7 flex flex-col">
@@ -291,10 +293,19 @@ export function PressureSettingsModal({
             />
           )}
 
-          {activeTab !== 'control' && (
+          {activeTab === 'alarms' && (
+            <AlarmsTab
+              config={config}
+              onChangeConfig={onChangeConfig}
+              onSave={onSave}
+              currentSolarVoltage={currentSolarVoltage}
+              currentLoggerVoltage={currentLoggerVoltage}
+            />
+          )}
+
+          {activeTab !== 'control' && activeTab !== 'alarms' && (
             <div className="flex-1 min-h-[300px] flex flex-col items-center justify-center p-8 text-center">
               <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-blue-950/40 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4 shadow-xs">
-                {activeTab === 'alarms' && <ShieldAlert className="w-8 h-8 text-rose-500" />}
                 {activeTab === 'schedule' && <CalendarClock className="w-8 h-8 text-amber-500" />}
                 {activeTab === 'calibration' && <Gauge className="w-8 h-8 text-indigo-500" />}
                 {activeTab === 'modbus' && <Activity className="w-8 h-8 text-emerald-500" />}

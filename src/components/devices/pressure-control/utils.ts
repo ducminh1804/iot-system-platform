@@ -1,4 +1,9 @@
-import { PressureStationConfig } from './types';
+import {
+  PressureStationConfig,
+  SolarBatteryConfig,
+  LoggerBatteryConfig,
+  PulseMeterConfig,
+} from './types';
 
 /**
  * Định dạng số theo chuẩn Việt Nam:
@@ -20,6 +25,36 @@ export function formatVNNumber(
   return decPart !== undefined ? `${formattedInt},${decPart}` : formattedInt;
 }
 
+export const DEFAULT_SOLAR_BATTERY_CONFIG: SolarBatteryConfig = {
+  enabled: true,
+  chemistry: 'lifepo4',
+  nominalVoltage: 12.8,
+  capacityAh: 20.0,
+  triggerThresholdPercent: 25,
+  voltageFull: 14.4,
+  voltageCutoff: 10.8,
+  averageLoadWatts: 3.5,
+};
+
+export const DEFAULT_LOGGER_BATTERY_CONFIG: LoggerBatteryConfig = {
+  enabled: true,
+  notifyServer: true,
+  serverProtocol: 'mqtt',
+  serverEndpoint: 'iot/station/1015/alarm/battery',
+  alertRepeatMinutes: 30,
+};
+
+export const DEFAULT_PULSE_METER_CONFIG: PulseMeterConfig = {
+  pulsesPerUnit: 10,
+  pulseUnit: 'liter_per_pulse',
+  flowRateUnit: 'm3_h',
+  netFlowTotal: 1653377.3,
+  forwardFlow: 1653381.6,
+  reserveFlow: 4.3,
+  debounceFilterMs: 20,
+  cutoffMinFlowRate: 0.05,
+};
+
 export const DEFAULT_PRESSURE_CONFIG: PressureStationConfig = {
   targetP1: 27.8,
   targetP2: 50.0,
@@ -36,4 +71,7 @@ export const DEFAULT_PRESSURE_CONFIG: PressureStationConfig = {
   autoShutoff: true,
   rtcAutoSync: true,
   lowBattery: 11.5,
+  solarBattery: DEFAULT_SOLAR_BATTERY_CONFIG,
+  loggerBattery: DEFAULT_LOGGER_BATTERY_CONFIG,
+  pulseMeter: DEFAULT_PULSE_METER_CONFIG,
 };

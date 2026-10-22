@@ -62,6 +62,8 @@ export function PressureControlDetailView({ onBack }: PressureControlDetailViewP
   const currentDeltaP = Math.abs(currentPressureIn - currentPressureOut);
   const currentFlowRate = activeLevel === 0 ? 0.0 : 49.6;
   const currentVelocity = activeLevel === 0 ? 0.0 : 0.8;
+  const solarBatteryVoltage = 12.46;
+  const loggerBatteryVoltage = 3.6;
 
   // Real-time clock update (live second ticking)
   useEffect(() => {
@@ -99,19 +101,19 @@ export function PressureControlDetailView({ onBack }: PressureControlDetailViewP
       setGaugeVal2(0);
       setGaugeVal3(0);
       setLastActionTimes((prev) => ({ ...prev, 1: formatted }));
-      toast.success('Thao tác thành công');
+      toast.success('Đã gửi tín hiệu');
     } else if (level === 2) {
       setGaugeVal1(0);
       setGaugeVal2(config.targetP2);
       setGaugeVal3(0);
       setLastActionTimes((prev) => ({ ...prev, 2: formatted }));
-      toast.success('Thao tác thành công');
+      toast.success('Đã gửi tín hiệu');
     } else {
       setGaugeVal1(0);
       setGaugeVal2(0);
       setGaugeVal3(config.targetP3);
       setLastActionTimes((prev) => ({ ...prev, 3: formatted }));
-      toast.success('Thao tác thành công');
+      toast.success('Đã gửi tín hiệu');
     }
   };
 
@@ -123,7 +125,7 @@ export function PressureControlDetailView({ onBack }: PressureControlDetailViewP
     setGaugeVal2(0);
     setGaugeVal3(0);
     setLastActionTimes((prev) => ({ ...prev, 4: formatted }));
-    toast.success('Thao tác thành công');
+    toast.success('Đã gửi tín hiệu');
   };
 
   // Lưu cấu hình từ modal cài đặt
@@ -132,20 +134,20 @@ export function PressureControlDetailView({ onBack }: PressureControlDetailViewP
     else if (activeLevel === 2) setGaugeVal2(config.targetP2);
     else if (activeLevel === 3) setGaugeVal3(config.targetP3);
 
-    toast.success('Thao tác thành công');
+    toast.success('Đã gửi tín hiệu');
     setIsSettingsOpen(false);
   };
 
   // Khôi phục mặc định
   const handleResetDefaults = () => {
     setConfig(DEFAULT_PRESSURE_CONFIG);
-    toast.success('Thao tác thành công');
+    toast.success('Đã gửi tín hiệu');
   };
 
   // Đồng bộ RTC ngay lập tức
   const handleSyncRTC = () => {
     setRtcTime(getFormattedNow());
-    toast.success('Thao tác thành công');
+    toast.success('Đã gửi tín hiệu');
   };
 
   return (
@@ -184,6 +186,8 @@ export function PressureControlDetailView({ onBack }: PressureControlDetailViewP
             currentPressureOut={currentPressureOut}
             currentDeltaP={currentDeltaP}
             rtcTime={rtcTime}
+            solarBatteryVoltage={solarBatteryVoltage}
+            loggerBatteryVoltage={loggerBatteryVoltage}
           />
         </div>
       </div>
