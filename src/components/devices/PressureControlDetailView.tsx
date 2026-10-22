@@ -12,19 +12,32 @@ import {
   PressureSettingsModal,
 } from './pressure-control';
 
+import { DeviceStation } from './mockDeviceData';
+
 export { formatVNNumber };
 
 interface PressureControlDetailViewProps {
   onBack: () => void;
+  station?: DeviceStation | null;
 }
 
-export function PressureControlDetailView({ onBack }: PressureControlDetailViewProps) {
+export function PressureControlDetailView({ onBack, station }: PressureControlDetailViewProps) {
   // Thông tin định danh trạm (Tên - ID - Version)
   const [stationMeta, setStationMeta] = useState<StationMetaInfo>({
-    name: 'Thiết bị điều khiển áp lực',
-    stationId: '1015',
-    version: 'version 1',
+    name: station?.name || 'Thiết bị điều khiển áp lực',
+    stationId: station?.stationId || '1015',
+    version: station?.version || 'version 1',
   });
+
+  useEffect(() => {
+    if (station) {
+      setStationMeta({
+        name: station.name,
+        stationId: station.stationId,
+        version: station.version || 'version 1',
+      });
+    }
+  }, [station]);
 
   // Trạng thái hiển thị modal cài đặt
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
@@ -162,6 +175,7 @@ export function PressureControlDetailView({ onBack }: PressureControlDetailViewP
         isSettingsOpen={isSettingsOpen}
         onToggleSettings={() => setIsSettingsOpen(!isSettingsOpen)}
         onBack={onBack}
+        rtcTime={rtcTime}
       />
 
       {/* 2. MAIN MONITOR VIEW */}

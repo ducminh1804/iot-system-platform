@@ -1,26 +1,44 @@
-import React, { useState, useMemo } from 'react';
-import { SpeedometerGauge } from '@/components/gauge/SpeedometerGauge';
+import React, { useState, useMemo, useEffect } from 'react';
 import { PressureControlDetailView } from './PressureControlDetailView';
-import { X, Send, Activity, CheckCircle2, Search, SlidersHorizontal, RefreshCw } from 'lucide-react';
+import { DeviceListView } from './DeviceListView';
+import { Search, SlidersHorizontal, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface DeviceItem {
-  id: string;
-  code: string;
-  title: string;
-  count: number;
-  unit: string;
-  version: string;
-  versionCount: number;
-  status: string;
-  dotColor: string;
-  area: string;
-}
+import { useAppStore } from '@/stores/useAppStore';
+import {
+  DeviceCategory,
+  DeviceStation,
+  DEVICE_CATEGORIES,
+} from './mockDeviceData';
 
 export function DeviceHubView() {
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
-  const [activeModalId, setActiveModalId] = useState<string | null>(null);
-  const [pressureVal, setPressureVal] = useState<number>(50);
+  const [selectedCategory, setSelectedCategory] = useState<DeviceCategory | null>(null);
+  const [selectedStation, setSelectedStation] = useState<DeviceStation | null>(null);
+  const { setDeviceBreadcrumbs } = useAppStore();
+
+  useEffect(() => {
+    if (selectedStation && selectedCategory) {
+      setDeviceBreadcrumbs({
+        categoryTitle: selectedCategory.title,
+        onBackToHub: () => {
+          setSelectedStation(null);
+          setSelectedCategory(null);
+        },
+        stationName: `Trạm ${selectedStation.stationId}`,
+        onBackToList: () => setSelectedStation(null),
+      });
+    } else if (selectedCategory) {
+      setDeviceBreadcrumbs({
+        categoryTitle: selectedCategory.title,
+        onBackToHub: () => setSelectedCategory(null),
+      });
+    } else {
+      setDeviceBreadcrumbs(null);
+    }
+  }, [selectedCategory, selectedStation, setDeviceBreadcrumbs]);
+
+  useEffect(() => {
+    return () => setDeviceBreadcrumbs(null);
+  }, [setDeviceBreadcrumbs]);
 
   // Filters from Image 1
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,73 +46,9 @@ export function DeviceHubView() {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedVersion, setSelectedVersion] = useState('all');
 
-  // The 5 devices from reference
-  const deviceList: DeviceItem[] = [
-    {
-      id: 'pressureControl',
-      code: 'pressureControl',
-      title: 'Thiết bị điều khiển áp lực',
-      count: 24,
-      unit: 'trạm',
-      version: 'v3.2.0',
-      versionCount: 3,
-      status: 'Hoạt động',
-      dotColor: '#2563EB',
-      area: 'Khu Vực Bắc TP',
-    },
-    {
-      id: 'dataLogger',
-      code: 'dataLogger',
-      title: 'Data Logger',
-      count: 156,
-      unit: 'điểm đo',
-      version: 'v2.1.4',
-      versionCount: 4,
-      status: 'Hoạt động',
-      dotColor: '#10B981',
-      area: 'Khu Vực Nam TP',
-    },
-    {
-      id: 'valveBreaker',
-      code: 'valveBreaker',
-      title: 'Đóng ngắt van bước tự động',
-      count: 42,
-      unit: 'van',
-      version: 'v1.8.2',
-      versionCount: 2,
-      status: 'Hoạt động',
-      dotColor: '#F59E0B',
-      area: 'Khu Vực Đông',
-    },
-    {
-      id: 'waterQuality',
-      code: 'waterQuality',
-      title: 'Tủ chất lượng nước',
-      count: 18,
-      unit: 'tủ',
-      version: 'v2.0.5',
-      versionCount: 2,
-      status: 'Hoạt động',
-      dotColor: '#8B5CF6',
-      area: 'Khu Vực Bắc TP',
-    },
-    {
-      id: 'other',
-      code: 'other',
-      title: 'Thiết bị khác',
-      count: 65,
-      unit: 'thiết bị',
-      version: 'v1.0.0',
-      versionCount: 1,
-      status: 'Hoạt động',
-      dotColor: '#64748B',
-      area: 'Tất cả khu vực',
-    },
-  ];
-
   // Filtered devices
   const filteredDevices = useMemo(() => {
-    return deviceList.filter((item) => {
+    return DEVICE_CATEGORIES.filter((item) => {
       const matchSearch =
         !searchTerm.trim() ||
         item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -111,18 +65,15 @@ export function DeviceHubView() {
 
       return matchSearch && matchArea && matchVersion;
     });
-  }, [deviceList, searchTerm, selectedArea, selectedVersion]);
+  }, [searchTerm, selectedArea, selectedVersion]);
 
-  const handleCardClick = (cardId: string) => {
-    if (cardId === 'pressureControl') {
-      // Navigate to dedicated station detail page as requested
-      setSelectedDeviceId('pressureControl');
-    } else {
-      setActiveModalId(cardId);
+  const handleCardClick = (category: DeviceCategory) => {
+    if (category.id !== 'pressureControl') {
+      return;
     }
+    // Navigate to Level 2 (Device List View)
+    setSelectedCategory(category);
   };
-
-  const activeCardInfo = deviceList.find((c) => c.id === activeModalId);
 
   const resetFilters = () => {
     setSearchTerm('');
@@ -132,11 +83,28 @@ export function DeviceHubView() {
     toast.success('Đã làm mới bộ lọc');
   };
 
-  // If card 1 (pressureControl) is selected, show the full station detail view
-  if (selectedDeviceId === 'pressureControl') {
-    return <PressureControlDetailView onBack={() => setSelectedDeviceId(null)} />;
+  // Level 3: Station Detail View
+  if (selectedStation) {
+    return (
+      <PressureControlDetailView
+        station={selectedStation}
+        onBack={() => setSelectedStation(null)}
+      />
+    );
   }
 
+  // Level 2: Device List View for Selected Category
+  if (selectedCategory) {
+    return (
+      <DeviceListView
+        category={selectedCategory}
+        onBack={() => setSelectedCategory(null)}
+        onSelectStation={(station) => setSelectedStation(station)}
+      />
+    );
+  }
+
+  // Level 1: Category Hub View
   return (
     <div className="w-full h-full flex flex-col min-h-0 select-none">
       {/* 1. TOP FILTER BAR - Gọn gàng trên mobile, đầy đủ trên desktop */}
@@ -154,8 +122,8 @@ export function DeviceHubView() {
             />
             <button
               type="button"
-              onClick={() => toast.info(`Tìm thấy ${filteredDevices.length} thiết bị phù hợp`)}
-              className="h-9 px-3.5 rounded-xl bg-black hover:bg-slate-800 dark:bg-white dark:text-black text-white font-bold text-xs flex items-center justify-center gap-1.5 shrink-0 active:scale-95 transition-transform"
+              onClick={() => toast.info(`Tìm thấy ${filteredDevices.length} nhóm thiết bị phù hợp`)}
+              className="h-9 px-3.5 rounded-xl bg-black hover:bg-slate-800 dark:bg-white dark:text-black text-white font-bold text-xs flex items-center justify-center gap-1.5 shrink-0 active:scale-95 transition-transform cursor-pointer"
             >
               <Search className="w-3.5 h-3.5" />
               <span>Tìm</span>
@@ -262,11 +230,11 @@ export function DeviceHubView() {
             </select>
           </div>
 
-          {/* Field 5: Nút Tìm kiếm (Tiếng Việt) */}
+          {/* Field 5: Nút Tìm kiếm */}
           <div>
             <button
               type="button"
-              onClick={() => toast.info(`Tìm thấy ${filteredDevices.length} thiết bị phù hợp`)}
+              onClick={() => toast.info(`Tìm thấy ${filteredDevices.length} nhóm thiết bị phù hợp`)}
               className="w-full h-9 sm:h-10 rounded-xl bg-black hover:bg-slate-800 dark:bg-white dark:text-black dark:hover:bg-slate-200 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer transition-all shadow-xs active:scale-98"
             >
               <Search className="w-4 h-4" />
@@ -276,36 +244,47 @@ export function DeviceHubView() {
         </div>
       </div>
 
-      {/* 2. DEVICE CARDS GRID - Co giãn tự nhiên, không bị bóp nghẹt trên mobile */}
+      {/* 2. DEVICE CARDS GRID */}
       {filteredDevices.length > 0 ? (
         <div className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden lg:max-h-[540px] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:grid-rows-2 gap-2.5 sm:gap-4 pb-6 lg:pb-0 pr-0.5">
           {filteredDevices.map((card) => {
+            const isClickable = card.id === 'pressureControl';
             return (
               <div
                 key={card.id}
-                onClick={() => handleCardClick(card.id)}
-                className="h-auto lg:h-full min-h-[135px] sm:min-h-[155px] rounded-[18px] sm:rounded-[24px] bg-white dark:bg-[#13161F] border border-slate-200/90 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700/80 hover:bg-slate-50/60 dark:hover:bg-[#171B26] p-3.5 sm:p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)] transition-all duration-200 cursor-pointer flex flex-col justify-between group overflow-hidden"
+                onClick={() => handleCardClick(card)}
+                className={`h-auto lg:h-full min-h-[140px] sm:min-h-[160px] rounded-[18px] sm:rounded-[24px] bg-white dark:bg-[#13161F] border p-3.5 sm:p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition-all duration-200 flex flex-col justify-between overflow-hidden ${
+                  isClickable
+                    ? 'border-slate-200/90 dark:border-slate-800/90 hover:border-blue-500/50 dark:hover:border-blue-500/50 hover:bg-slate-50/60 dark:hover:bg-[#171B26] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)] cursor-pointer group'
+                    : 'border-slate-200/60 dark:border-slate-800/50 opacity-60 bg-slate-50/40 dark:bg-[#11141B] cursor-not-allowed select-none'
+                }`}
+                title={isClickable ? 'Bấm để xem danh sách trạm' : 'Chức năng chưa khả dụng'}
               >
                 {/* Top Section: Title & Status Badge */}
                 <div className="flex items-start justify-between gap-2 sm:gap-3">
-                  <div className="min-w-0 pr-1">
-                    <h3 className="text-sm sm:text-base lg:text-lg font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
+                  <div className="min-w-0 pr-1 flex-1">
+                    <h3
+                      className={`text-sm sm:text-base lg:text-[17px] font-bold text-slate-900 dark:text-white tracking-tight leading-snug transition-colors ${
+                        isClickable ? 'group-hover:text-blue-600 dark:group-hover:text-blue-400' : ''
+                      }`}
+                    >
                       {card.title}
                     </h3>
-                    <p className="text-[10px] sm:text-[11px] font-mono text-slate-400 dark:text-slate-500 mt-0.5">
-                      {card.code}
-                    </p>
                   </div>
 
                   {/* Top-right pill badge */}
-                  <div className="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold bg-emerald-500/10 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 group-hover:border-emerald-500/40 shrink-0 transition-colors">
+                  <div className="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-semibold bg-emerald-500/10 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0 transition-colors">
                     {card.status}
                   </div>
                 </div>
 
                 {/* Bottom Recessed Container with Signature Diagonal Chamfer Corner */}
                 <div
-                  className="flex-1 min-h-[76px] sm:min-h-[90px] mt-2 sm:mt-3 p-2.5 sm:p-4 rounded-[14px] sm:rounded-[18px] bg-slate-50/90 dark:bg-[#1A202C] border border-slate-200/60 dark:border-slate-800/80 group-hover:border-slate-300/80 dark:group-hover:border-slate-700/80 group-hover:bg-slate-100/80 dark:group-hover:bg-[#1E2536] transition-colors flex flex-col justify-between"
+                  className={`flex-1 min-h-[76px] sm:min-h-[90px] mt-2 sm:mt-3 p-2.5 sm:p-4 rounded-[14px] sm:rounded-[18px] border transition-colors flex flex-col justify-between ${
+                    isClickable
+                      ? 'bg-slate-50/90 dark:bg-[#1A202C] border-slate-200/60 dark:border-slate-800/80 group-hover:border-slate-300/80 dark:group-hover:border-slate-700/80 group-hover:bg-slate-100/80 dark:group-hover:bg-[#1E2536]'
+                      : 'bg-slate-100/40 dark:bg-[#151923] border-slate-200/40 dark:border-slate-800/40'
+                  }`}
                   style={{
                     clipPath:
                       'polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%)',
@@ -333,7 +312,7 @@ export function DeviceHubView() {
                     </div>
 
                     {/* Version Badge Pill */}
-                    <div className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-full bg-white dark:bg-[#283142] border border-slate-200/80 dark:border-slate-700/60 group-hover:border-slate-300 dark:group-hover:border-slate-600 group-hover:bg-slate-50 dark:group-hover:bg-[#303B4E] flex items-center gap-1.5 sm:gap-2 shadow-2xs shrink-0 transition-colors">
+                    <div className="px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-full bg-white dark:bg-[#283142] border border-slate-200/80 dark:border-slate-700/60 flex items-center gap-1.5 sm:gap-2 shadow-2xs shrink-0 transition-colors">
                       <span
                         className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0 shadow-xs"
                         style={{ backgroundColor: card.dotColor }}
@@ -366,92 +345,6 @@ export function DeviceHubView() {
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Đặt lại bộ lọc</span>
           </button>
-        </div>
-      )}
-
-      {/* Interactive Modal when clicking a card */}
-      {activeModalId && activeCardInfo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs transition-opacity"
-            onClick={() => setActiveModalId(null)}
-          />
-
-          {/* Modal Content */}
-          <div className="relative z-10 w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white dark:bg-[#151A24] rounded-[28px] border border-slate-200/80 dark:border-slate-800 p-6 sm:p-8 shadow-2xl">
-            {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
-              <div className="text-left">
-                <span className="text-xs font-mono font-bold text-slate-400 dark:text-slate-500">
-                  {activeCardInfo.code}
-                </span>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                  {activeCardInfo.title}
-                </h3>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setActiveModalId(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="pt-6">
-              {activeModalId === 'pressureControl' ? (
-                /* Speedometer Gauge for Pressure Control */
-                <div className="flex flex-col items-center">
-                  <SpeedometerGauge
-                    value={pressureVal}
-                    onChange={(val) => setPressureVal(val)}
-                    unit="Bar"
-                    size={380}
-                    variant="card"
-                    showControls={true}
-                    showMetrics={true}
-                    easingStyle="spring"
-                  />
-                  <div className="w-full mt-5 flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 text-xs">
-                    <span className="text-slate-500 font-medium">Áp suất đặt:</span>
-                    <span className="font-bold text-blue-600 font-mono text-base">
-                      {(pressureVal / 10).toFixed(2).replace('.', ',')} Bar
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => toast.success('Đã gửi tín hiệu')}
-                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition-transform"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>Áp Dụng</span>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                /* Simple, clean info for other cards */
-                <div className="space-y-4 text-center py-4">
-                  <div className="w-12 h-12 rounded-2xl mx-auto flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                    <Activity className="w-6 h-6" />
-                  </div>
-                  <h4 className="text-base font-bold text-slate-900 dark:text-white">
-                    {activeCardInfo.title}
-                  </h4>
-                  <div className="flex items-center justify-center gap-4 text-xs text-slate-500">
-                    <span>Số lượng: <strong className="text-slate-800 dark:text-slate-200">{activeCardInfo.count} {activeCardInfo.unit}</strong></span>
-                    <span>•</span>
-                    <span>Phiên bản: <strong className="text-slate-800 dark:text-slate-200">{activeCardInfo.version}</strong></span>
-                  </div>
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Trạng thái bình thường</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       )}
     </div>

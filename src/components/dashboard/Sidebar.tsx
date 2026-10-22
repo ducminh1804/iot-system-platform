@@ -30,12 +30,12 @@ export function Sidebar({
   activeItem,
   onSelectItem,
 }: SidebarProps) {
-  const [workspace, setWorkspace] = useState('Startup Inc.');
+  const [workspace, setWorkspace] = useState('SCADA Cấp Nước');
 
   const workspaces = [
-    { name: 'Startup Inc.', code: 'SI', active: true, plan: 'Enterprise' },
-    { name: 'Acme Cloud', code: 'AC', active: false, plan: 'Pro' },
-    { name: 'Venture Labs', code: 'VL', active: false, plan: 'Team' },
+    { name: 'SCADA Cấp Nước', code: 'CN', active: true, plan: 'Toàn Mạng' },
+    { name: 'Chi Nhánh Cấp Nước Bắc', code: 'NB', active: false, plan: 'Khu Bắc' },
+    { name: 'Chi Nhánh Cấp Nước Nam', code: 'NN', active: false, plan: 'Khu Nam' },
   ];
 
   const mainNav = [

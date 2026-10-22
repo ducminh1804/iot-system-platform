@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Wifi, Settings, X } from 'lucide-react';
+import { ArrowLeft, Wifi, Settings, X, Clock } from 'lucide-react';
 
 interface PressureControlHeaderProps {
   stationName?: string;
@@ -9,48 +9,61 @@ interface PressureControlHeaderProps {
   ratio90: string;
   isSettingsOpen: boolean;
   onToggleSettings: () => void;
-  onBack: () => void;
+  onBack?: () => void;
+  showBackButton?: boolean;
+  rtcTime?: string;
 }
 
 export function PressureControlHeader({
   stationName = 'Thiết bị điều khiển áp lực tự động',
   stationId = '1015',
-  version = 'version 1',
+  version = 'v1',
   ratio0,
   ratio90,
   isSettingsOpen,
   onToggleSettings,
   onBack,
+  showBackButton = true,
+  rtcTime,
 }: PressureControlHeaderProps) {
   return (
     <div className="relative z-50 shrink-0 w-full bg-white dark:bg-[#13161F] rounded-[18px] sm:rounded-[22px] border border-slate-200/90 dark:border-slate-800/90 px-2.5 sm:px-3.5 py-1.5 sm:py-2.5 shadow-xs flex items-center justify-between gap-2 sm:gap-3 transition-colors">
-      {/* Left: Back button + Station Identity */}
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0 max-w-[calc(50%-24px)] sm:max-w-[45%]">
-        <button
-          type="button"
-          onClick={() => {
-            if (isSettingsOpen) {
-              onToggleSettings();
-            } else {
-              onBack();
-            }
-          }}
-          className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors cursor-pointer shrink-0"
-          title={isSettingsOpen ? 'Thoát cài đặt' : 'Quay lại danh sách thiết bị'}
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </button>
+      {/* Left: Back button (if enabled) + Station Identity (ID + Ratios + Name) */}
+      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 max-w-[calc(50%-20px)] sm:max-w-[calc(50%-24px)]">
+        {showBackButton && onBack && (
+          <button
+            type="button"
+            onClick={() => {
+              if (isSettingsOpen) {
+                onToggleSettings();
+              } else {
+                onBack();
+              }
+            }}
+            className="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors cursor-pointer shrink-0"
+            title={isSettingsOpen ? 'Thoát cài đặt' : 'Quay lại danh sách thiết bị'}
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+        )}
 
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <h2 className="text-sm sm:text-base lg:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight font-mono truncate">
-              {stationId} 0:{ratio0} 90:{ratio90}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline gap-1.5 min-w-0">
+            {/* Mã trạm / ID luôn nổi bật và KHÔNG BAO GIỜ bị ẩn */}
+            <h2 className="text-sm sm:text-base lg:text-lg font-black text-slate-900 dark:text-white tracking-tight font-mono shrink-0">
+              {stationId}
             </h2>
-            <span className="px-1.5 sm:px-2 py-0.5 rounded-md text-[11px] sm:text-xs font-bold font-mono bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">
-              {version}
+            {/* Tỉ số van bước */}
+            <span className="text-[11px] sm:text-xs font-mono font-semibold text-slate-400 dark:text-slate-500 truncate">
+              0:{ratio0} 90:{ratio90}
             </span>
           </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 font-medium truncate">
+
+          {/* Tên trạm hiển thị rõ ràng */}
+          <p
+            className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate"
+            title={stationName}
+          >
             {stationName}
           </p>
         </div>
@@ -66,8 +79,29 @@ export function PressureControlHeader({
         </div>
       </div>
 
-      {/* Right: Settings Gear Button (Icon only) */}
-      <div className="flex items-center gap-2 shrink-0">
+      {/* Right: Version + RTC timestamp + Settings Gear Button */}
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {/* Version chuyển sang bên phải cạnh Settings để không chèn ép ID và tên trạm */}
+        {version && (
+          <span
+            className="px-2 py-0.5 rounded-md text-[10px] sm:text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 shrink-0 select-none"
+            title={`Phiên bản phần mềm: ${version}`}
+          >
+            {version.startsWith('v') ? version : `v${version.replace(/^version\s*/i, '')}`}
+          </span>
+        )}
+
+        {rtcTime && (
+          <div
+            className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-[#1A202C] border border-slate-200/80 dark:border-slate-800 text-xs font-mono text-slate-600 dark:text-slate-300 shadow-2xs select-none"
+            title="Thời gian thực thiết bị (RTC)"
+          >
+            <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <span className="text-[11px] font-semibold text-slate-400">RTC:</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">{rtcTime}</span>
+          </div>
+        )}
+
         <button
           type="button"
           onClick={onToggleSettings}

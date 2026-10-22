@@ -4,10 +4,7 @@ import {
   X,
   Pencil,
   Check,
-  CalendarClock,
   Gauge,
-  Activity,
-  Cpu,
   Droplets,
   Waves,
   Zap,
@@ -19,7 +16,7 @@ import { ControlMechanismTab } from './tabs/ControlMechanismTab';
 import { AlarmsTab } from './tabs/AlarmsTab';
 import { PulseMeterTab } from './tabs/PulseMeterTab';
 import { SensorCalibrationTab } from './tabs/SensorCalibrationTab';
-import { FlowAlarmTab } from './tabs/FlowAlarmTab';
+import { AnomalyAlarmTab } from './tabs/AnomalyAlarmTab';
 import { WaveTabs, WaveTabItem } from './WaveTabs';
 
 export type SettingsTabId =
@@ -27,20 +24,14 @@ export type SettingsTabId =
   | 'pulse_meter'
   | 'flow_alarms'
   | 'alarms'
-  | 'schedule'
-  | 'calibration'
-  | 'modbus'
-  | 'system';
+  | 'calibration';
 
 const SETTINGS_TABS: WaveTabItem<SettingsTabId>[] = [
   { id: 'control', label: 'Cơ chế điều khiển', icon: SlidersHorizontal, accentColor: 'text-orange-500' },
   { id: 'pulse_meter', label: 'Đồng hồ xung', icon: Droplets, accentColor: 'text-blue-500' },
-  { id: 'flow_alarms', label: 'Cảnh báo lưu lượng', icon: Waves, accentColor: 'text-cyan-500' },
+  { id: 'flow_alarms', label: 'Cảnh báo bất thường', icon: Waves, accentColor: 'text-cyan-500' },
   { id: 'alarms', label: 'Cảnh báo nguồn & Pin', icon: Zap, accentColor: 'text-amber-500' },
-  { id: 'schedule', label: 'Lịch trình áp', icon: CalendarClock, accentColor: 'text-amber-500' },
   { id: 'calibration', label: 'Calib cảm biến', icon: Gauge, accentColor: 'text-indigo-500' },
-  { id: 'modbus', label: 'Truyền thông Modbus', icon: Activity, accentColor: 'text-emerald-500' },
-  { id: 'system', label: 'Hệ thống & RTC', icon: Cpu, accentColor: 'text-cyan-500' },
 ];
 
 interface PressureSettingsModalProps {
@@ -314,11 +305,13 @@ export function PressureSettingsModal({
           )}
 
           {activeTab === 'flow_alarms' && (
-            <FlowAlarmTab
+            <AnomalyAlarmTab
               config={config}
+              stationMeta={stationMeta}
               onChangeConfig={onChangeConfig}
               onSave={onSave}
               currentFlowRate={currentFlowRate}
+              currentPressureIn={currentPressureIn}
             />
           )}
 
@@ -341,26 +334,6 @@ export function PressureSettingsModal({
               currentPressureOut={currentPressureOut}
             />
           )}
-
-          {activeTab !== 'control' &&
-            activeTab !== 'pulse_meter' &&
-            activeTab !== 'flow_alarms' &&
-            activeTab !== 'alarms' &&
-            activeTab !== 'calibration' && (
-              <div className="flex-1 min-h-[300px] flex flex-col items-center justify-center p-8 text-center">
-                <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-blue-950/40 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4 shadow-xs">
-                  {activeTab === 'schedule' && <CalendarClock className="w-8 h-8 text-amber-500" />}
-                  {activeTab === 'modbus' && <Activity className="w-8 h-8 text-emerald-500" />}
-                  {activeTab === 'system' && <Cpu className="w-8 h-8 text-cyan-500" />}
-                </div>
-                <h4 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-200">
-                  {SETTINGS_TABS.find((t) => t.id === activeTab)?.label}
-                </h4>
-                <p className="text-xs sm:text-sm text-slate-400 max-w-md mt-1.5">
-                  Tab này đã sẵn sàng. Bạn có thể yêu cầu thiết kế chi tiết các thông số cụ thể cho tab này bất cứ lúc nào!
-                </p>
-              </div>
-            )}
         </div>
       </div>
     </div>

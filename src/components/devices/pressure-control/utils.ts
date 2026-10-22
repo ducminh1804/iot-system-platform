@@ -5,6 +5,7 @@ import {
   PulseMeterConfig,
   SensorCalibrationConfig,
   FlowAlarmConfig,
+  AnomalyAlarmConfig,
 } from './types';
 
 /**

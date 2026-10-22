@@ -15,7 +15,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <DashboardLayout />
-      <Toaster richColors position="top-right" />
+      <Toaster richColors position="bottom-right" />
     </ThemeProvider>
   );
 }
@@ -26,7 +26,7 @@ function DashboardLayout() {
   const [activeNavItem, setActiveNavItem] = useState('dashboard');
   const [globalTimeRange, setGlobalTimeRange] = useState<TimeRange>('Month');
 
-  const pageTitle = activeNavItem === 'devices' ? 'Thiết Bị' : 'Revenue Analytics';
+  const pageTitle = activeNavItem === 'devices' ? 'Thiết Bị' : 'Dashboard';
 
   return (
     <div className="h-screen w-screen bg-[#F4F5F7] dark:bg-[#0E131C] flex overflow-hidden transition-colors duration-200">

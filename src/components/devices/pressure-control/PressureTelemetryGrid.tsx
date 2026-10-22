@@ -8,7 +8,7 @@ interface PressureTelemetryGridProps {
   currentPressureIn: number;
   currentPressureOut: number;
   currentDeltaP: number;
-  rtcTime: string;
+  rtcTime?: string;
   solarBatteryVoltage?: number;
   loggerBatteryVoltage?: number;
   lowPowerMeter?: boolean;
@@ -145,8 +145,8 @@ export function PressureTelemetryGrid({
               Solar Battery:
             </span>
             <div className="flex items-center gap-1.5">
-              <Battery className="w-4 h-4 text-emerald-500" />
-              <span className="text-xs sm:text-[13px] lg:text-sm font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
+              <Battery className="w-4 h-4 text-emerald-500 shrink-0" />
+              <span className="w-16 text-right text-xs sm:text-[13px] lg:text-sm font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
                 {formatVNNumber(solarBatteryVoltage, 2)}V
               </span>
             </div>
@@ -158,8 +158,8 @@ export function PressureTelemetryGrid({
               Logger Battery:
             </span>
             <div className="flex items-center gap-1.5">
-              <Battery className="w-4 h-4 text-emerald-500" />
-              <span className="text-xs sm:text-[13px] lg:text-sm font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
+              <Battery className="w-4 h-4 text-emerald-500 shrink-0" />
+              <span className="w-16 text-right text-xs sm:text-[13px] lg:text-sm font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
                 {formatVNNumber(loggerBatteryVoltage, 1)}V
               </span>
             </div>
@@ -181,17 +181,7 @@ export function PressureTelemetryGrid({
             </span>
           </div>
 
-          {/* 4. RTC Time */}
-          <div className="flex items-center justify-between py-0.5 px-2 rounded-md hover:bg-slate-50 dark:hover:bg-[#1A202C] transition-colors">
-            <span className="text-xs sm:text-[13px] font-medium text-slate-600 dark:text-slate-300">
-              RTC:
-            </span>
-            <span className="text-xs sm:text-[13px] lg:text-sm font-mono font-bold text-slate-800 dark:text-slate-200">
-              {rtcTime}
-            </span>
-          </div>
-
-          {/* 5. Link Protocol */}
+          {/* 4. Link Protocol */}
           <div className="pt-1 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between px-2 text-xs sm:text-[13px]">
             <span className="text-slate-500 dark:text-slate-400 font-medium">Link Protocol:</span>
             <span className="font-mono font-extrabold text-blue-600 dark:text-blue-400">

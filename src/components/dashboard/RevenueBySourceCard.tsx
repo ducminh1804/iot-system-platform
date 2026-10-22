@@ -19,24 +19,18 @@ export function RevenueBySourceCard() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   const sources: SourceItem[] = [
-    { name: 'Subscriptions', percentage: '62%', value: '$52,120', color: '#2563EB', weight: 62 },
-    { name: 'One-time Sales', percentage: '20%', value: '$16,840', color: '#F97316', weight: 20 },
-    { name: 'Add-ons', percentage: '10%', value: '$8,420', color: '#10B981', weight: 10 },
-    { name: 'Other', percentage: '12%', value: '$6,830', color: '#EAB308', weight: 12 },
-    { name: 'Refunds', percentage: '03%', value: '$2,620', color: '#EF4444', weight: 3 },
+    { name: 'DMA 01 - Khu Bắc', percentage: '55%', value: '46.315 m³', color: '#2563EB', weight: 55 },
+    { name: 'DMA 02 - Khu Nam', percentage: '20%', value: '16.840 m³', color: '#06B6D4', weight: 20 },
+    { name: 'DMA 03 - Khu Đông', percentage: '13%', value: '10.950 m³', color: '#10B981', weight: 13 },
+    { name: 'DMA 04 - Trung Tâm', percentage: '12%', value: '10.105 m³', color: '#F59E0B', weight: 12 },
   ];
 
   // Arc segments calculation for the semi-circle
-  // The visual arc in the screenshot has 4 main colored segments across the top:
-  // 1. Blue (Subscriptions) ~ 58%
-  // 2. Coral/Orange (One-time Sales) ~ 20%
-  // 3. Yellow (Other) ~ 12%
-  // 4. Green (Add-ons) ~ 10%
   const arcSegments = [
-    { id: 0, name: 'Subscriptions', color: '#2563EB', pct: 0.55 },
-    { id: 1, name: 'One-time Sales', color: '#F97316', pct: 0.20 },
-    { id: 3, name: 'Other', color: '#EAB308', pct: 0.12 },
-    { id: 2, name: 'Add-ons', color: '#10B981', pct: 0.13 },
+    { id: 0, name: 'DMA 01 - Khu Bắc', color: '#2563EB', pct: 0.55 },
+    { id: 1, name: 'DMA 02 - Khu Nam', color: '#06B6D4', pct: 0.20 },
+    { id: 2, name: 'DMA 03 - Khu Đông', color: '#10B981', pct: 0.13 },
+    { id: 3, name: 'DMA 04 - Trung Tâm', color: '#F59E0B', pct: 0.12 },
   ];
 
   const cx = 160;
@@ -77,7 +71,7 @@ export function RevenueBySourceCard() {
       {/* Card Header */}
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
-          Revenue by Source
+          Phân Phối Lưu Lượng DMA
         </h3>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -88,10 +82,10 @@ export function RevenueBySourceCard() {
               <MoreVertical className="w-4 h-4" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44 rounded-xl p-1 text-xs shadow-xl">
-            <DropdownMenuItem className="cursor-pointer">Xem chi tiết doanh thu</DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">Xuất dữ liệu CSV</DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">Cài đặt kênh nguồn</DropdownMenuItem>
+          <DropdownMenuContent align="end" className="w-48 rounded-xl p-1 text-xs shadow-xl">
+            <DropdownMenuItem className="cursor-pointer">Xem chi tiết vùng DMA</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">Xuất báo cáo lưu lượng CSV</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">Cấu hình phân vùng DMA</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -134,11 +128,11 @@ export function RevenueBySourceCard() {
         {/* Center Metric Callout */}
         <div className="text-center -mt-16 sm:-mt-20 z-10 select-none">
           <div className="text-3xl sm:text-[34px] font-extrabold tracking-tight text-slate-900 dark:text-white font-sans leading-tight">
-            $84,210
+            84.210 m³
           </div>
           <div className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-500 dark:text-emerald-400 mt-0.5">
             <ArrowUpRight className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>16.8% Last month</span>
+            <span>+16.8% so với chu kỳ trước</span>
           </div>
         </div>
       </div>

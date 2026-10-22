@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Bell, Moon, Sun, X, LogOut, User, Settings as SettingsIcon, Menu } from 'lucide-react';
+import { Search, Bell, Moon, Sun, X, LogOut, User, Settings as SettingsIcon, Menu, ArrowLeft } from 'lucide-react';
 import { useAppStore } from '@/stores/useAppStore';
 import {
   DropdownMenu,
@@ -20,7 +20,7 @@ export function Header({
   onSearchChange,
   onOpenMobileMenu,
 }: HeaderProps) {
-  const { theme, setTheme } = useAppStore();
+  const { theme, setTheme, deviceBreadcrumbs } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [hasUnread, setHasUnread] = useState(true);
 
@@ -36,7 +36,7 @@ export function Header({
 
   return (
     <header className="w-full flex items-center justify-between gap-2.5 sm:gap-4">
-      {/* Title & Mobile Menu Button */}
+      {/* Title & Mobile Menu Button / Breadcrumbs */}
       <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
         {onOpenMobileMenu && (
           <button
@@ -48,9 +48,55 @@ export function Header({
             <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         )}
-        <h1 className="text-base sm:text-xl lg:text-[24px] font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight truncate">
-          {title}
-        </h1>
+
+        {deviceBreadcrumbs ? (
+          <div className="flex items-center gap-1.5 sm:gap-2 text-base sm:text-xl lg:text-[23px] font-black tracking-tight min-w-0 text-slate-900 dark:text-white">
+            {/* Back button */}
+            <button
+              type="button"
+              onClick={deviceBreadcrumbs.stationName ? deviceBreadcrumbs.onBackToList : deviceBreadcrumbs.onBackToHub}
+              className="p-1 sm:p-1.5 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-800 transition-colors cursor-pointer mr-0.5"
+              title="Quay lại"
+            >
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+
+            {/* Root "Thiết Bị" */}
+            <button
+              type="button"
+              onClick={deviceBreadcrumbs.onBackToHub}
+              className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer whitespace-nowrap font-bold"
+            >
+              Thiết Bị
+            </button>
+            <span className="text-slate-300 dark:text-slate-600 font-light">/</span>
+
+            {/* Category / Station */}
+            {deviceBreadcrumbs.stationName ? (
+              <>
+                <button
+                  type="button"
+                  onClick={deviceBreadcrumbs.onBackToList}
+                  className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer truncate max-w-[120px] sm:max-w-[220px] font-bold"
+                >
+                  {deviceBreadcrumbs.categoryTitle}
+                </button>
+                <span className="text-slate-300 dark:text-slate-600 font-light">/</span>
+                <span className="truncate text-blue-600 dark:text-blue-400">
+                  {deviceBreadcrumbs.stationName}
+                </span>
+              </>
+            ) : (
+              <span className="truncate">
+                {deviceBreadcrumbs.categoryTitle}
+              </span>
+            )}
+          </div>
+        ) : (
+          <h1 className="text-base sm:text-xl lg:text-[24px] font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight truncate">
+            {title}
+          </h1>
+        )}
       </div>
 
       {/* Right Controls: Search, Notification, Theme Toggle, Profile */}

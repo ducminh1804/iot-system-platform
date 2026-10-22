@@ -24,28 +24,26 @@ export function RevenueGrowthCard() {
   const chartW = width - paddingLeft - paddingRight;
   const chartH = height - paddingTop - paddingBottom;
 
-  // Custom non-linear scale matching the screenshot's Y-axis:
-  // 300k, 200k, 100k, 75k, 50k, 25k, $0
+  // Scale trục Y theo lưu lượng (m³):
   const yTicks = [
-    { label: '300k', fraction: 0 },
-    { label: '200k', fraction: 0.2 },
-    { label: '100k', fraction: 0.42 },
-    { label: '75k', fraction: 0.58 },
-    { label: '50k', fraction: 0.72 },
-    { label: '25k', fraction: 0.86 },
-    { label: '$0', fraction: 1.0 },
+    { label: '300k m³', fraction: 0 },
+    { label: '200k m³', fraction: 0.2 },
+    { label: '100k m³', fraction: 0.42 },
+    { label: '75k m³', fraction: 0.58 },
+    { label: '50k m³', fraction: 0.72 },
+    { label: '25k m³', fraction: 0.86 },
+    { label: '0 m³', fraction: 1.0 },
   ];
 
-  // Raw wave samples for Month view (Jan - Jul)
-  // Matching the exact curve geometry from the screenshot:
+  // Dữ liệu mẫu lưu lượng mạng lưới theo chu kỳ tháng (Thg 1 - Thg 7):
   const rawMonths = [
-    { month: 'Jan', yFrac: 0.78, displayVal: '68k', dateStr: '15 JAN 2026' },
-    { month: 'Feb', yFrac: 0.81, displayVal: '58k', dateStr: '12 FEB 2026' },
-    { month: 'Mar', yFrac: 0.38, displayVal: '162k', dateStr: '20 MAR 2026' },
-    { month: 'Apr', yFrac: 0.65, displayVal: '84k', dateStr: '18 APR 2026' },
-    { month: 'May', yFrac: 0.45, displayVal: '509k', dateStr: '5 MAY 2026' }, // Target featured pin!
-    { month: 'Jun', yFrac: 0.35, displayVal: '215k', dateStr: '22 JUN 2026' },
-    { month: 'Jul', yFrac: 0.15, displayVal: '280k', dateStr: '28 JUL 2026' },
+    { month: 'Thg 1', yFrac: 0.78, displayVal: '68k m³', dateStr: '15 THG 1 2026' },
+    { month: 'Thg 2', yFrac: 0.81, displayVal: '58k m³', dateStr: '12 THG 2 2026' },
+    { month: 'Thg 3', yFrac: 0.38, displayVal: '162k m³', dateStr: '20 THG 3 2026' },
+    { month: 'Thg 4', yFrac: 0.65, displayVal: '84k m³', dateStr: '18 THG 4 2026' },
+    { month: 'Thg 5', yFrac: 0.45, displayVal: '209k m³', dateStr: '5 THG 5 2026' },
+    { month: 'Thg 6', yFrac: 0.35, displayVal: '215k m³', dateStr: '22 THG 6 2026' },
+    { month: 'Thg 7', yFrac: 0.15, displayVal: '280k m³', dateStr: '28 THG 7 2026' },
   ];
 
   // Dense spline points for the organic undulating wave matching screenshot
@@ -123,7 +121,7 @@ export function RevenueGrowthCard() {
       {/* Header and Filter Pills */}
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
-          Revenue Growth
+          Xu Hướng Lưu Lượng Cấp Nước
         </h3>
 
         {/* Range Pill Toggle */}
@@ -230,9 +228,9 @@ export function RevenueGrowthCard() {
             className="filter drop-shadow-sm cursor-pointer transition-all duration-150"
           />
 
-          {/* Floating Tooltip Box (5 MAY 2026 · 509k) */}
+          {/* Floating Tooltip Box */}
           <g
-            transform={`translate(${activePoint.x - 45}, ${Math.max(
+            transform={`translate(${activePoint.x - 50}, ${Math.max(
               10,
               activePoint.y - 65
             )})`}
@@ -240,7 +238,7 @@ export function RevenueGrowthCard() {
           >
             {/* Tooltip Background Card */}
             <rect
-              width="90"
+              width="100"
               height="50"
               rx="10"
               fill="white"
@@ -252,22 +250,22 @@ export function RevenueGrowthCard() {
 
             {/* Header: Date + Info icon */}
             <text
-              x="12"
+              x="10"
               y="18"
-              className="text-[10px] font-semibold fill-slate-400 dark:fill-slate-400 font-sans tracking-wide uppercase"
+              className="text-[9.5px] font-semibold fill-slate-400 dark:fill-slate-400 font-sans tracking-wide uppercase"
             >
               {activePoint.dateStr}
             </text>
-            <circle cx="76" cy="15" r="4.5" fill="none" stroke="#94A3B8" strokeWidth="0.8" />
-            <text x="74.5" y="17.5" className="text-[7px] font-bold fill-slate-400">
+            <circle cx="86" cy="15" r="4.5" fill="none" stroke="#94A3B8" strokeWidth="0.8" />
+            <text x="84.5" y="17.5" className="text-[7px] font-bold fill-slate-400">
               i
             </text>
 
-            {/* Big Stat Value: 509k */}
+            {/* Big Stat Value */}
             <text
-              x="12"
+              x="10"
               y="38"
-              className="text-[17px] font-extrabold fill-slate-900 dark:fill-white font-sans tracking-tight"
+              className="text-[16px] font-extrabold fill-slate-900 dark:fill-white font-sans tracking-tight"
             >
               {activePoint.displayVal}
             </text>

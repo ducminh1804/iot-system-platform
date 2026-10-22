@@ -14,8 +14,9 @@ interface PressureLevelControlsProps {
     3: string;
     4: string;
   };
-  onSelectLevel: (level: 1 | 2 | 3) => void;
-  onShutoffWater: () => void;
+  onSelectLevel?: (level: 1 | 2 | 3) => void;
+  onShutoffWater?: () => void;
+  readOnly?: boolean;
 }
 
 export function PressureLevelControls({
@@ -26,6 +27,7 @@ export function PressureLevelControls({
   lastActionTimes,
   onSelectLevel,
   onShutoffWater,
+  readOnly = false,
 }: PressureLevelControlsProps) {
   const [windowWidth, setWindowWidth] = useState<number>(
     typeof window !== 'undefined' ? window.innerWidth : 1200
@@ -50,11 +52,13 @@ export function PressureLevelControls({
     <div className="shrink-0 grid grid-cols-4 gap-1 sm:gap-2 lg:gap-3">
       {/* Gauge 1: Mức áp 1 */}
       <div
-        role="button"
-        tabIndex={0}
-        onClick={() => onSelectLevel(1)}
-        onKeyDown={(e) => e.key === 'Enter' && onSelectLevel(1)}
-        className={`h-[110px] sm:h-[142px] lg:h-[180px] rounded-[14px] sm:rounded-[20px] lg:rounded-[22px] bg-white dark:bg-[#13161F] p-1.5 sm:p-2.5 lg:p-3 shadow-xs flex flex-col items-center justify-between transition-all duration-300 cursor-pointer overflow-hidden ${
+        role={readOnly ? undefined : 'button'}
+        tabIndex={readOnly ? -1 : 0}
+        onClick={readOnly ? undefined : () => onSelectLevel?.(1)}
+        onKeyDown={readOnly ? undefined : (e) => e.key === 'Enter' && onSelectLevel?.(1)}
+        className={`h-[110px] sm:h-[142px] lg:h-[180px] rounded-[14px] sm:rounded-[20px] lg:rounded-[22px] bg-white dark:bg-[#13161F] p-1.5 sm:p-2.5 lg:p-3 shadow-xs flex flex-col items-center justify-between transition-all duration-300 overflow-hidden ${
+          readOnly ? 'cursor-default pointer-events-none' : 'cursor-pointer'
+        } ${
           activeLevel === 1
             ? 'border-2 border-blue-500/80 dark:border-blue-500/80 ring-2 ring-blue-500/20 shadow-blue-500/10'
             : 'border border-slate-200/90 dark:border-slate-800/90 opacity-70 hover:opacity-100 hover:border-slate-300 dark:hover:border-slate-700'
@@ -105,11 +109,13 @@ export function PressureLevelControls({
 
       {/* Gauge 2: Mức áp 2 */}
       <div
-        role="button"
-        tabIndex={0}
-        onClick={() => onSelectLevel(2)}
-        onKeyDown={(e) => e.key === 'Enter' && onSelectLevel(2)}
-        className={`h-[110px] sm:h-[142px] lg:h-[180px] rounded-[14px] sm:rounded-[20px] lg:rounded-[22px] bg-white dark:bg-[#13161F] p-1.5 sm:p-2.5 lg:p-3 shadow-xs flex flex-col items-center justify-between transition-all duration-300 cursor-pointer overflow-hidden ${
+        role={readOnly ? undefined : 'button'}
+        tabIndex={readOnly ? -1 : 0}
+        onClick={readOnly ? undefined : () => onSelectLevel?.(2)}
+        onKeyDown={readOnly ? undefined : (e) => e.key === 'Enter' && onSelectLevel?.(2)}
+        className={`h-[110px] sm:h-[142px] lg:h-[180px] rounded-[14px] sm:rounded-[20px] lg:rounded-[22px] bg-white dark:bg-[#13161F] p-1.5 sm:p-2.5 lg:p-3 shadow-xs flex flex-col items-center justify-between transition-all duration-300 overflow-hidden ${
+          readOnly ? 'cursor-default pointer-events-none' : 'cursor-pointer'
+        } ${
           activeLevel === 2
             ? 'border-2 border-emerald-500/80 dark:border-emerald-500/80 ring-2 ring-emerald-500/20 shadow-emerald-500/10'
             : 'border border-slate-200/90 dark:border-slate-800/90 opacity-70 hover:opacity-100 hover:border-slate-300 dark:hover:border-slate-700'
@@ -160,11 +166,13 @@ export function PressureLevelControls({
 
       {/* Gauge 3: Mở full */}
       <div
-        role="button"
-        tabIndex={0}
-        onClick={() => onSelectLevel(3)}
-        onKeyDown={(e) => e.key === 'Enter' && onSelectLevel(3)}
-        className={`h-[110px] sm:h-[142px] lg:h-[180px] rounded-[14px] sm:rounded-[20px] lg:rounded-[22px] bg-white dark:bg-[#13161F] p-1.5 sm:p-2.5 lg:p-3 shadow-xs flex flex-col items-center justify-between transition-all duration-300 cursor-pointer overflow-hidden ${
+        role={readOnly ? undefined : 'button'}
+        tabIndex={readOnly ? -1 : 0}
+        onClick={readOnly ? undefined : () => onSelectLevel?.(3)}
+        onKeyDown={readOnly ? undefined : (e) => e.key === 'Enter' && onSelectLevel?.(3)}
+        className={`h-[110px] sm:h-[142px] lg:h-[180px] rounded-[14px] sm:rounded-[20px] lg:rounded-[22px] bg-white dark:bg-[#13161F] p-1.5 sm:p-2.5 lg:p-3 shadow-xs flex flex-col items-center justify-between transition-all duration-300 overflow-hidden ${
+          readOnly ? 'cursor-default pointer-events-none' : 'cursor-pointer'
+        } ${
           activeLevel === 3
             ? 'border-2 border-amber-500/80 dark:border-amber-500/80 ring-2 ring-amber-500/20 shadow-amber-500/10'
             : 'border border-slate-200/90 dark:border-slate-800/90 opacity-70 hover:opacity-100 hover:border-slate-300 dark:hover:border-slate-700'
@@ -215,11 +223,13 @@ export function PressureLevelControls({
 
       {/* Card 4: Đóng nước */}
       <div
-        role="button"
-        tabIndex={0}
-        onClick={onShutoffWater}
-        onKeyDown={(e) => e.key === 'Enter' && onShutoffWater()}
-        className={`h-[110px] sm:h-[142px] lg:h-[180px] rounded-[14px] sm:rounded-[20px] lg:rounded-[22px] p-1.5 sm:p-2.5 lg:p-3 shadow-xs flex flex-col items-center justify-between transition-all duration-300 cursor-pointer overflow-hidden ${
+        role={readOnly ? undefined : 'button'}
+        tabIndex={readOnly ? -1 : 0}
+        onClick={readOnly ? undefined : onShutoffWater}
+        onKeyDown={readOnly ? undefined : (e) => e.key === 'Enter' && onShutoffWater?.()}
+        className={`h-[110px] sm:h-[142px] lg:h-[180px] rounded-[14px] sm:rounded-[20px] lg:rounded-[22px] p-1.5 sm:p-2.5 lg:p-3 shadow-xs flex flex-col items-center justify-between transition-all duration-300 overflow-hidden ${
+          readOnly ? 'cursor-default pointer-events-none' : 'cursor-pointer'
+        } ${
           activeLevel === 0
             ? 'bg-rose-50/40 dark:bg-rose-950/20 border-2 border-rose-500/90 dark:border-rose-500/90 ring-2 ring-rose-500/20 shadow-rose-500/10'
             : 'bg-white dark:bg-[#13161F] border border-slate-200/90 dark:border-slate-800/90 opacity-70 hover:opacity-100 hover:border-rose-300 dark:hover:border-rose-700/60'
