@@ -127,18 +127,18 @@ function PressureStepperInput({
   };
 
   return (
-    <div className="inline-flex items-center gap-1.5">
+    <div className="inline-flex items-center gap-1 sm:gap-1.5 shrink-0">
       <button
         type="button"
         disabled={disabled || value <= min}
         onClick={() => handleStep(-step)}
         aria-label={`Giảm ${ariaLabel ?? 'áp suất'}`}
-        className="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#181D2A] text-slate-700 dark:text-slate-200 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition-all shadow-2xs shrink-0"
+        className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#181D2A] text-slate-700 dark:text-slate-200 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition-all shadow-2xs shrink-0"
       >
         <Minus className="w-3.5 h-3.5" />
       </button>
 
-      <div className="relative flex items-center h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0B0E14] focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
+      <div className="relative flex items-center h-8 sm:h-9 px-2 sm:px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0B0E14] focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
         <input
           type="text"
           inputMode="decimal"
@@ -178,9 +178,9 @@ function PressureStepperInput({
           onWheel={(e) => {
             e.currentTarget.blur();
           }}
-          className={`w-14 text-center bg-transparent text-sm font-mono font-extrabold ${accentClass} focus:outline-none disabled:opacity-40`}
+          className={`w-10 sm:w-12 text-center bg-transparent text-xs sm:text-sm font-mono font-extrabold ${accentClass} focus:outline-none disabled:opacity-40`}
         />
-        <span className="text-[11px] font-mono font-semibold text-slate-400 select-none pl-1">
+        <span className="text-[10px] sm:text-[11px] font-mono font-semibold text-slate-400 select-none pl-0.5">
           mH₂O
         </span>
       </div>
@@ -190,7 +190,7 @@ function PressureStepperInput({
         disabled={disabled || value >= max}
         onClick={() => handleStep(step)}
         aria-label={`Tăng ${ariaLabel ?? 'áp suất'}`}
-        className="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#181D2A] text-slate-700 dark:text-slate-200 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition-all shadow-2xs shrink-0"
+        className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#181D2A] text-slate-700 dark:text-slate-200 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition-all shadow-2xs shrink-0"
       >
         <Plus className="w-3.5 h-3.5" />
       </button>
@@ -556,34 +556,22 @@ export function ControlMechanismTab({
       <div className="flex-1 flex flex-col gap-4 max-w-5xl mx-auto w-full py-1">
         {/* 1. Header chọn chế độ cấu hình & kích hoạt vận hành (Tối ưu hoàn hảo cho Mobile & Mở rộng N chế độ) */}
         <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#141824] p-3 sm:px-4 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            {/* Bộ chọn chế độ cấu hình (Dropdown thích ứng, hỗ trợ 2 đến 10+ chế độ không bao giờ vỡ trên điện thoại) */}
-            <div className="relative flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1.5 sm:mb-0">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                  Cơ chế cấu hình:
-                </span>
-              </div>
-
-              <div className="relative">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+            {/* Hàng chọn chế độ (Dropdown thích ứng) + Nút Kích hoạt trên cùng 1 hàng */}
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <div className="relative flex-1 min-w-0">
                 <button
                   type="button"
                   onClick={() => setIsModeSelectorOpen((prev) => !prev)}
-                  className="w-full sm:max-w-md h-10 px-3.5 flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-[#0E121B] hover:border-slate-300 dark:hover:border-slate-600 transition-all cursor-pointer shadow-2xs"
+                  className="w-full h-10 px-3 sm:px-3.5 flex items-center justify-between gap-2 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-[#0E121B] hover:border-slate-300 dark:hover:border-slate-600 transition-all cursor-pointer shadow-2xs"
                 >
-                  <div className="flex items-center gap-2.5 truncate">
+                  <div className="flex items-center gap-2 truncate">
                     <CurrentViewingIcon
                       className={`w-4 h-4 shrink-0 ${currentViewingMode.color}`}
                     />
                     <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
                       {currentViewingMode.name}
                     </span>
-                    {isCurrentViewActive && (
-                      <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Đang chạy
-                      </span>
-                    )}
                   </div>
 
                   <ChevronDown
@@ -643,39 +631,41 @@ export function ControlMechanismTab({
                   </>
                 )}
               </div>
+
+              {/* Nút Kích hoạt / Trạng thái nằm ngay cạnh Dropdown */}
+              <div className="shrink-0">
+                {isCurrentViewActive ? (
+                  <div className="inline-flex items-center gap-1.5 h-10 px-2.5 sm:px-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="hidden xs:inline">Đang kích hoạt</span>
+                    <span className="xs:hidden">Đang chạy</span>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleActivateViewingMode}
+                    className="inline-flex items-center gap-1.5 h-10 px-3 sm:px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs cursor-pointer active:scale-95 transition-all"
+                    title={`Kích hoạt "${currentViewingMode.name}" làm cơ chế vận hành chính của trạm`}
+                  >
+                    <Zap className="w-3.5 h-3.5 fill-current" />
+                    <span className="hidden xs:inline">Kích hoạt chế độ này</span>
+                    <span className="xs:hidden">Kích hoạt</span>
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Cụm Kích hoạt & Trạng thái (Tối ưu responsive trên cả mobile và desktop) */}
-            <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800/80">
-              {viewingMode === 'schedule_rtc' && overlappingIds.size > 0 && (
-                <button
-                  type="button"
-                  onClick={handleAutoChainSchedules}
-                  className="h-10 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <Wand2 className="w-3.5 h-3.5" />
-                  <span className="hidden xs:inline">Nối tiếp khung giờ</span>
-                  <span className="xs:hidden">Nối tiếp</span>
-                </button>
-              )}
-
-              {isCurrentViewActive ? (
-                <div className="inline-flex items-center gap-2 h-10 px-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-xs font-bold shrink-0">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Đang kích hoạt</span>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleActivateViewingMode}
-                  className="inline-flex items-center gap-1.5 h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
-                  title={`Kích hoạt "${currentViewingMode.name}" làm cơ chế vận hành chính của trạm`}
-                >
-                  <Zap className="w-3.5 h-3.5 fill-current" />
-                  <span>Kích hoạt chế độ này</span>
-                </button>
-              )}
-            </div>
+            {/* Nút nối tiếp khung giờ nếu có xung đột */}
+            {viewingMode === 'schedule_rtc' && overlappingIds.size > 0 && (
+              <button
+                type="button"
+                onClick={handleAutoChainSchedules}
+                className="h-9 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer w-full sm:w-auto"
+              >
+                <Wand2 className="w-3.5 h-3.5" />
+                <span>Nối tiếp khung giờ</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -1066,7 +1056,7 @@ export function ControlMechanismTab({
               return (
                 <div
                   key={slot.id}
-                  className={`p-3.5 sm:px-5 sm:py-4 transition-colors ${
+                  className={`p-3 sm:px-5 sm:py-3.5 transition-colors ${
                     !slot.enabled
                       ? 'bg-slate-50/60 dark:bg-[#0e121b]/60 opacity-55'
                       : isOverlapping
@@ -1074,10 +1064,10 @@ export function ControlMechanismTab({
                       : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/20'
                   }`}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    {/* Cột 1: Tên giai đoạn + Switch */}
-                    <div className="flex items-center justify-between sm:justify-start gap-3 sm:w-44 shrink-0">
-                      <div className="flex items-center gap-2.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+                    {/* Hàng 1 trên Mobile: Tiêu đề + Switch bên trái, Stepper bên phải */}
+                    <div className="flex items-center justify-between gap-2 sm:w-44 shrink-0">
+                      <div className="flex items-center gap-2">
                         <Switch
                           id={switchId}
                           checked={slot.enabled}
@@ -1087,28 +1077,30 @@ export function ControlMechanismTab({
                         />
                         <label
                           htmlFor={switchId}
-                          className="text-sm font-bold text-slate-800 dark:text-slate-200 cursor-pointer select-none"
+                          className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 cursor-pointer select-none"
                         >
                           {slot.label}
                         </label>
                       </div>
 
-                      {isOverlapping && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="text-amber-500 cursor-help">
-                              <AlertTriangle className="w-4 h-4" />
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            Khung giờ đang bị chồng lấn với giai đoạn khác
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
+                      {/* Trên Mobile: Hiện stepper ngay trên cùng hàng */}
+                      <div className="sm:hidden">
+                        <PressureStepperInput
+                          min={5}
+                          max={50}
+                          step={0.5}
+                          disabled={!slot.enabled}
+                          value={slot.targetPressure}
+                          ariaLabel={`Áp suất ${slot.label}`}
+                          onChange={(val) =>
+                            updateSchedule(slot.id, { targetPressure: val })
+                          }
+                        />
+                      </div>
                     </div>
 
-                    {/* Cột 2: Khung giờ Bắt đầu -> Kết thúc */}
-                    <div className="flex items-center gap-2">
+                    {/* Hàng 2 trên Mobile: Khung giờ Bắt đầu -> Kết thúc */}
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                       <TimePicker24h
                         hour={slot.startHour}
                         minute={slot.startMinute}
@@ -1128,10 +1120,23 @@ export function ControlMechanismTab({
                           updateSchedule(slot.id, { endHour: h, endMinute: m })
                         }
                       />
+
+                      {isOverlapping && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-amber-500 cursor-help pl-1">
+                              <AlertTriangle className="w-4 h-4" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            Khung giờ đang bị chồng lấn với giai đoạn khác
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                     </div>
 
-                    {/* Cột 3: Mức áp suất (Nút -/+ và ô nhập số, đã bỏ thanh kéo) */}
-                    <div className="flex items-center justify-end">
+                    {/* Trên Desktop: Stepper nằm ở cột 3 cuối dòng */}
+                    <div className="hidden sm:flex items-center justify-end">
                       <PressureStepperInput
                         min={5}
                         max={50}

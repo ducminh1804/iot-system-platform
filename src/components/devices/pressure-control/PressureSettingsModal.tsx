@@ -386,30 +386,6 @@ export function PressureSettingsModal({
             </button>
           </div>
         </div>
-              className={`relative h-9 px-4 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all ${
-                isDirty
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white ring-2 ring-blue-500/30'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-              }`}
-              title="Lưu toàn bộ cấu hình trạm"
-            >
-              {isDirty && (
-                <span className="w-2 h-2 rounded-full bg-amber-300 animate-pulse" />
-              )}
-              <Check className="w-3.5 h-3.5" />
-              <span>Lưu</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleRequestClose}
-              className="p-2 sm:p-2.5 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
-              title="Đóng (Thoát)"
-            >
-              <X className="w-5 h-5 sm:w-6 sm:h-6" />
-            </button>
-          </div>
-        </div>
 
         {/* 2. Thanh tab bar */}
         <WaveTabs
