@@ -10,11 +10,16 @@ interface PressureStepperInputProps {
   onChange: (val: number) => void;
   accentClass?: string;
   ariaLabel?: string;
+  placeholder?: string;
+  showSteppers?: boolean;
+  showUnit?: boolean;
+  className?: string;
 }
 
 /**
- * Component nhập áp suất có nút bấm - và + kèm ô nhập trực tiếp.
- * Khắc phục triệt để lỗi nhập số (cho phép xóa rỗng tạm thời, phím Enter/Esc, Arrow keys).
+ * Component nhập giá trị áp suất:
+ * - Hỗ trợ cả chế độ Stepper (+/-) lẫn chế độ Ô nhập rộng (Direct Input) không nút +/- và không đơn vị mH₂O.
+ * - Cho phép nhập số thập phân, gõ trực tiếp, phím Enter/Esc, Arrow keys.
  */
 export function PressureStepperInput({
   value,
@@ -25,6 +30,10 @@ export function PressureStepperInput({
   onChange,
   accentClass = 'text-blue-600 dark:text-blue-400',
   ariaLabel,
+  placeholder,
+  showSteppers = true,
+  showUnit = true,
+  className = '',
 }: PressureStepperInputProps) {
   const [draft, setDraft] = useState<string>(String(value));
   const [isFocused, setIsFocused] = useState(false);
@@ -59,23 +68,30 @@ export function PressureStepperInput({
   };
 
   return (
-    <div className="flex items-center gap-1 select-none">
-      <button
-        type="button"
-        disabled={disabled || value <= min}
-        onClick={() => handleStep(-step)}
-        aria-label={`Giảm ${ariaLabel ?? 'áp suất'}`}
-        className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#181D2A] text-slate-700 dark:text-slate-200 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition-all shadow-2xs shrink-0"
-      >
-        <Minus className="w-3.5 h-3.5" />
-      </button>
+    <div className={`flex items-center gap-1.5 select-none ${className}`}>
+      {showSteppers && (
+        <button
+          type="button"
+          disabled={disabled || value <= min}
+          onClick={() => handleStep(-step)}
+          aria-label={`Giảm ${ariaLabel ?? 'áp suất'}`}
+          className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#181D2A] text-slate-700 dark:text-slate-200 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition-all shadow-2xs shrink-0"
+        >
+          <Minus className="w-3.5 h-3.5" />
+        </button>
+      )}
 
-      <div className="flex items-center justify-center h-8 sm:h-9 px-1.5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#181D2A] shadow-2xs">
+      <div
+        className={`flex items-center h-9 sm:h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#181D2A] shadow-2xs focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all ${
+          showSteppers ? 'justify-center w-20 sm:w-24' : 'w-full'
+        }`}
+      >
         <input
           type="text"
           inputMode="decimal"
           disabled={disabled}
           value={draft}
+          placeholder={placeholder}
           aria-label={ariaLabel ?? 'Giá trị áp suất'}
           onFocus={(e) => {
             setIsFocused(true);
@@ -110,23 +126,28 @@ export function PressureStepperInput({
           onWheel={(e) => {
             e.currentTarget.blur();
           }}
-          className={`w-10 sm:w-12 text-center bg-transparent text-xs sm:text-sm font-mono font-extrabold ${accentClass} focus:outline-none disabled:opacity-40`}
+          className={`w-full bg-transparent text-xs sm:text-sm font-mono font-extrabold ${accentClass} placeholder:font-sans placeholder:text-xs placeholder:font-medium placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none disabled:opacity-40 ${
+            showSteppers ? 'text-center' : 'text-left'
+          }`}
         />
-        <span className="text-[10px] sm:text-[11px] font-mono font-semibold text-slate-400 select-none pl-0.5">
-          mH₂O
-        </span>
+        {showUnit && (
+          <span className="text-[10px] sm:text-[11px] font-mono font-semibold text-slate-400 select-none pl-1 shrink-0">
+            mH₂O
+          </span>
+        )}
       </div>
 
-      <button
-        type="button"
-        disabled={disabled || value >= max}
-        onClick={() => handleStep(step)}
-        aria-label={`Tăng ${ariaLabel ?? 'áp suất'}`}
-        className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#181D2A] text-slate-700 dark:text-slate-200 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition-all shadow-2xs shrink-0"
-      >
-        <Plus className="w-3.5 h-3.5" />
-      </button>
+      {showSteppers && (
+        <button
+          type="button"
+          disabled={disabled || value >= max}
+          onClick={() => handleStep(step)}
+          aria-label={`Tăng ${ariaLabel ?? 'áp suất'}`}
+          className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#181D2A] text-slate-700 dark:text-slate-200 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition-all shadow-2xs shrink-0"
+        >
+          <Plus className="w-3.5 h-3.5" />
+        </button>
+      )}
     </div>
   );
 }
-

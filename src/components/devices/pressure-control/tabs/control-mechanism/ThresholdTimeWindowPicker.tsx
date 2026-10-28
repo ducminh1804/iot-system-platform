@@ -1,7 +1,11 @@
-import React from 'react';
-import { ArrowRight, Clock, Moon, SunMedium, Sparkles, CheckCircle2 } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { TimePicker24h } from './TimePicker24h';
+import React, { useEffect, useRef, useState } from 'react';
+import { ArrowRight, Check, ChevronDown, Clock, SunMedium } from 'lucide-react';
+import { ScheduleSlot } from '../../types';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface ThresholdTimeWindowPickerProps {
   triggerScope: 'all_time' | 'custom_window';
@@ -9,111 +13,35 @@ interface ThresholdTimeWindowPickerProps {
   startMinute: number;
   endHour: number;
   endMinute: number;
+  schedules?: ScheduleSlot[];
   onChangeScope: (scope: 'all_time' | 'custom_window') => void;
   onChangeTime: (type: 'start' | 'end', hour: number, minute: number) => void;
+  onSelectWindow?: (
+    startHour: number,
+    startMinute: number,
+    endHour: number,
+    endMinute: number
+  ) => void;
   disabled?: boolean;
 }
 
-/**
- * Tính thời lượng khung giờ (phút) và kiểm tra xem có qua đêm không
- */
-function computeWindowDuration(
-  startHour: number,
-  startMinute: number,
-  endHour: number,
-  endMinute: number
-): { durationMinutes: number; isOvernight: boolean } {
-  const startTotal = startHour * 60 + startMinute;
-  const endTotal = endHour * 60 + endMinute;
+const pad = (n: number) => n.toString().padStart(2, '0');
+const MINUTES_60 = Array.from({ length: 60 }, (_, i) => i);
 
-  if (startTotal === endTotal) {
-    return { durationMinutes: 0, isOvernight: false };
-  }
-
-  if (endTotal > startTotal) {
-    return { durationMinutes: endTotal - startTotal, isOvernight: false };
-  }
-
-  // Vắt qua nửa đêm (22:00 -> 05:00 hôm sau)
-  return { durationMinutes: 24 * 60 - startTotal + endTotal, isOvernight: true };
-}
-
-function formatDurationText(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h === 0) return `${m} phút`;
-  if (m === 0) return `${h} giờ`;
-  return `${h}h ${m}p`;
-}
+const DEFAULT_FIVE_SLOTS: ScheduleSlot[] = [
+  { id: 1, label: 'Giai đoạn 1', startHour: 5, startMinute: 0, endHour: 8, endMinute: 0, targetPressure: 28.5, enabled: true },
+  { id: 2, label: 'Giai đoạn 2', startHour: 8, startMinute: 0, endHour: 11, endMinute: 0, targetPressure: 24.0, enabled: true },
+  { id: 3, label: 'Giai đoạn 3', startHour: 11, startMinute: 0, endHour: 17, endMinute: 0, targetPressure: 22.0, enabled: true },
+  { id: 4, label: 'Giai đoạn 4', startHour: 17, startMinute: 0, endHour: 22, endMinute: 0, targetPressure: 32.0, enabled: true },
+  { id: 5, label: 'Giai đoạn 5', startHour: 22, startMinute: 0, endHour: 5, endMinute: 0, targetPressure: 18.0, enabled: true },
+];
 
 /**
- * Thanh Timeline 24H Trực quan (Poka-Yoke Visual Feedback)
- */
-function Visual24hTimeline({
-  isAllTime,
-  startHour,
-  startMinute,
-  endHour,
-  endMinute,
-}: {
-  isAllTime: boolean;
-  startHour: number;
-  startMinute: number;
-  endHour: number;
-  endMinute: number;
-}) {
-  const startPct = ((startHour * 60 + startMinute) / 1440) * 100;
-  const endPct = ((endHour * 60 + endMinute) / 1440) * 100;
-  const isOvernight = startPct > endPct;
-
-  return (
-    <div className="w-full space-y-1 select-none pt-1">
-      {/* Thanh vạch 24H */}
-      <div className="relative w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden border border-slate-300/40 dark:border-slate-700/50">
-        {isAllTime ? (
-          <div className="absolute inset-0 bg-blue-500 rounded-full" />
-        ) : isOvernight ? (
-          <>
-            <div
-              className="absolute top-0 bottom-0 bg-blue-500 rounded-r-full"
-              style={{ left: `${startPct}%`, right: 0 }}
-            />
-            <div
-              className="absolute top-0 bottom-0 left-0 bg-blue-500 rounded-l-full"
-              style={{ width: `${endPct}%` }}
-            />
-          </>
-        ) : (
-          <div
-            className="absolute top-0 bottom-0 bg-blue-500 rounded-full"
-            style={{
-              left: `${startPct}%`,
-              width: `${Math.max(2, endPct - startPct)}%`,
-            }}
-          />
-        )}
-
-        <div className="absolute left-[25%] top-0 bottom-0 w-[1px] bg-slate-400/40 pointer-events-none" />
-        <div className="absolute left-[50%] top-0 bottom-0 w-[1px] bg-slate-400/40 pointer-events-none" />
-        <div className="absolute left-[75%] top-0 bottom-0 w-[1px] bg-slate-400/40 pointer-events-none" />
-      </div>
-
-      <div className="flex justify-between text-[9px] font-mono font-semibold text-slate-400 px-0.5">
-        <span>00h</span>
-        <span>06h</span>
-        <span>12h</span>
-        <span>18h</span>
-        <span>24h</span>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Bộ chọn phạm vi thời gian (Toàn thời gian vs Khung giờ) chuẩn Poka-Yoke:
- * - Tab chuyển đổi 50/50 Full-Width cực lớn, không thể chạm nhầm bằng ngón tay.
- * - Thanh trượt animated pill chuyển đổi rõ ràng dứt khoát.
- * - Tự động ghi nhớ thời gian cũ khi đổi qua lại giữa 2 tab.
+ * Bộ chọn phạm vi thời gian (Toàn thời gian vs Khung giờ):
+ * - Popup Popover Portal nổi trên modal: không làm co dãn (zoom/stretch) các thẻ khác bên cạnh.
+ * - Tự động giới hạn chiều cao max-height theo không gian thực tế để không bao giờ bị che khuất dưới Taskbar.
+ * - Cột trái: 5 Khung giờ chẵn nổi bật, chữ Giai đoạn 1..5 nhỏ tinh tế.
+ * - Cột phải: Khung cuộn chọn phút (00 -> 59) mượt mà, tự động cuộn phút đang chọn vào tâm giữa.
  */
 export function ThresholdTimeWindowPicker({
   triggerScope,
@@ -121,177 +49,258 @@ export function ThresholdTimeWindowPicker({
   startMinute,
   endHour,
   endMinute,
+  schedules = DEFAULT_FIVE_SLOTS,
   onChangeScope,
   onChangeTime,
+  onSelectWindow,
   disabled = false,
 }: ThresholdTimeWindowPickerProps) {
-  const { durationMinutes, isOvernight } = computeWindowDuration(
-    startHour,
-    startMinute,
-    endHour,
-    endMinute
-  );
+  const [isScopeOpen, setIsScopeOpen] = useState(false);
+  const [isTimePopupOpen, setIsTimePopupOpen] = useState(false);
+  const minuteListRef = useRef<HTMLDivElement>(null);
 
   const isAllTime = triggerScope === 'all_time';
+  const fiveSlots = schedules.length >= 5 ? schedules.slice(0, 5) : DEFAULT_FIVE_SLOTS;
 
-  const applyPreset = (sh: number, sm: number, eh: number, em: number) => {
-    if (disabled) return;
-    onChangeScope('custom_window');
-    onChangeTime('start', sh, sm);
-    onChangeTime('end', eh, em);
+  // Số phút đang được chọn (áp dụng đồng nhất cho các khung giờ chẵn)
+  const selectedMinute = startMinute;
+
+  // Tìm giai đoạn đang khớp theo cặp giờ chẵn (startHour - endHour)
+  const matchedSlot = fiveSlots.find(
+    (s) => s.startHour === startHour && s.endHour === endHour
+  );
+
+  const scopeOptions: {
+    id: 'all_time' | 'custom_window';
+    label: string;
+    subText: string;
+    icon: React.ComponentType<{ className?: string }>;
+    iconColor: string;
+  }[] = [
+    {
+      id: 'all_time',
+      label: 'Toàn thời gian',
+      subText: '24/24H',
+      icon: SunMedium,
+      iconColor: 'text-blue-500',
+    },
+    {
+      id: 'custom_window',
+      label: 'Khung giờ',
+      subText: `${pad(startHour)}:${pad(selectedMinute)}-${pad(endHour)}:${pad(selectedMinute)}`,
+      icon: Clock,
+      iconColor: 'text-amber-500',
+    },
+  ];
+
+  const currentOption =
+    scopeOptions.find((opt) => opt.id === triggerScope) || scopeOptions[0];
+  const CurrentIcon = currentOption.icon;
+
+  useEffect(() => {
+    if (!isTimePopupOpen) return;
+    const timer = setTimeout(() => {
+      const activeMinEl = minuteListRef.current?.querySelector('[data-active="true"]');
+      activeMinEl?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }, 40);
+    return () => clearTimeout(timer);
+  }, [isTimePopupOpen]);
+
+  const applyWindowAndMinute = (sh: number, eh: number, min: number) => {
+    const clampedMin = Math.min(59, Math.max(0, min));
+    if (onSelectWindow) {
+      onSelectWindow(sh, clampedMin, eh, clampedMin);
+    } else {
+      onChangeTime('start', sh, clampedMin);
+      onChangeTime('end', eh, clampedMin);
+    }
+  };
+
+  const handlePickSlot = (slot: ScheduleSlot) => {
+    applyWindowAndMinute(slot.startHour, slot.endHour, selectedMinute);
+  };
+
+  const handlePickMinute = (m: number) => {
+    applyWindowAndMinute(startHour, endHour, m);
+  };
+
+  const handleSelectScopeOption = (scopeId: 'all_time' | 'custom_window') => {
+    onChangeScope(scopeId);
+    if (scopeId === 'custom_window' && !matchedSlot && fiveSlots.length > 0) {
+      applyWindowAndMinute(fiveSlots[0].startHour, fiveSlots[0].endHour, selectedMinute);
+    }
+    setIsScopeOpen(false);
   };
 
   return (
-    <div className="flex flex-col gap-2.5 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-[#0c0f17]/60 shadow-2xs">
-      {/* 1. THANH CHỌN TAB TOÀN CHIỀU RỘNG (50% / 50% Segmented Control - Chống bấm trượt hoàn toàn) */}
-      <div className="relative grid grid-cols-2 p-1 rounded-xl bg-slate-200/70 dark:bg-[#141824] border border-slate-300/50 dark:border-slate-700/60 select-none">
-        {/* Tab 1: Toàn thời gian */}
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => onChangeScope('all_time')}
-          className={`relative z-10 py-2 px-3 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 ${
-            isAllTime
-              ? 'text-blue-600 dark:text-blue-400'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          {isAllTime && (
-            <motion.div
-              layoutId="time-scope-tab-active-indicator"
-              className="absolute inset-0 bg-white dark:bg-[#1a2030] rounded-lg shadow-xs border border-slate-200/80 dark:border-slate-700 z-[-1]"
-              transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+    <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200/70 dark:border-slate-800 bg-slate-50/70 dark:bg-[#0c0f17]/60 gap-2 h-[48px] sm:h-[52px]">
+      {/* 1. Bên trái: Dropdown Popover chọn Toàn thời gian / Khung giờ */}
+      <Popover open={isScopeOpen} onOpenChange={setIsScopeOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            disabled={disabled}
+            className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#141824] hover:border-slate-300 dark:hover:border-slate-600 flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-2xs transition-all cursor-pointer disabled:opacity-50 shrink-0"
+          >
+            <CurrentIcon className={`w-3.5 h-3.5 shrink-0 ${currentOption.iconColor}`} />
+            <span>{currentOption.label}</span>
+            <ChevronDown
+              className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-150 ${
+                isScopeOpen ? 'rotate-180' : ''
+              }`}
             />
-          )}
-          <SunMedium className="w-4 h-4 shrink-0" />
-          <span>Toàn thời gian (24/24)</span>
-        </button>
+          </button>
+        </PopoverTrigger>
 
-        {/* Tab 2: Theo khung giờ */}
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => onChangeScope('custom_window')}
-          className={`relative z-10 py-2 px-3 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 ${
-            !isAllTime
-              ? 'text-blue-600 dark:text-blue-400'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-          }`}
+        <PopoverContent
+          align="start"
+          side="bottom"
+          sideOffset={6}
+          className="z-70 w-52 bg-white dark:bg-[#141822] border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-1 flex flex-col gap-0.5 ring-0"
         >
-          {!isAllTime && (
-            <motion.div
-              layoutId="time-scope-tab-active-indicator"
-              className="absolute inset-0 bg-white dark:bg-[#1a2030] rounded-lg shadow-xs border border-slate-200/80 dark:border-slate-700 z-[-1]"
-              transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-            />
-          )}
-          <Clock className="w-4 h-4 shrink-0" />
-          <span>Theo khung giờ</span>
-        </button>
-      </div>
+          {scopeOptions.map((opt) => {
+            const isSelected = opt.id === triggerScope;
+            const Icon = opt.icon;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => handleSelectScopeOption(opt.id)}
+                className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs transition-colors cursor-pointer ${
+                  isSelected
+                    ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-bold'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 font-medium'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Icon className={`w-3.5 h-3.5 shrink-0 ${opt.iconColor}`} />
+                  <span>{opt.label}</span>
+                </div>
 
-      {/* 2. THANH TIMELINE 24H TRỰC QUAN */}
-      <Visual24hTimeline
-        isAllTime={isAllTime}
-        startHour={startHour}
-        startMinute={startMinute}
-        endHour={endHour}
-        endMinute={endMinute}
-      />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-mono text-slate-400">
+                    {opt.subText}
+                  </span>
+                  {isSelected && (
+                    <Check className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </PopoverContent>
+      </Popover>
 
-      {/* 3. NỘI DUNG CHI TIẾT THEO CHẾ ĐỘ ĐANG CHỌN */}
+      {/* 2. Bên phải: Hiển thị 24/24H hoặc Nút mở Popup [5 Khung giờ | Chọn phút 00-59] */}
       {isAllTime ? (
-        /* Khi chọn Toàn thời gian */
-        <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/80 dark:bg-[#121622] border border-slate-200/60 dark:border-slate-800 text-xs animate-in fade-in duration-150">
-          <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300 font-semibold">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-            <span>Áp dụng liên tục mọi thời điểm trong ngày</span>
-          </div>
-          <span className="font-mono font-bold text-blue-600 dark:text-blue-400 shrink-0">
-            24 / 24 Giờ
-          </span>
-        </div>
+        <span className="text-xs font-mono font-bold text-slate-400 pr-2 select-none">
+          24/24H
+        </span>
       ) : (
-        /* Khi chọn Theo khung giờ */
-        <div className="space-y-2 pt-1 border-t border-slate-200/60 dark:border-slate-800 animate-in fade-in duration-150">
-          {/* Header trạng thái thời lượng & báo qua đêm */}
-          <div className="flex items-center justify-between text-xs font-mono font-bold text-slate-600 dark:text-slate-300">
-            <span className="text-[11px] font-sans font-semibold text-slate-400">
-              Thời gian áp dụng:
-            </span>
-            <div className="flex items-center gap-1.5">
-              {isOvernight && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                  <Moon className="w-3 h-3" />
-                  Qua đêm (+1 ngày)
+        <Popover open={isTimePopupOpen} onOpenChange={setIsTimePopupOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              disabled={disabled}
+              className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#141824] hover:border-blue-400 dark:hover:border-blue-500 flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-2xs transition-all cursor-pointer disabled:opacity-50 min-w-0"
+            >
+              <Clock className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+              <span className="font-mono">
+                {pad(startHour)}:{pad(selectedMinute)}
+              </span>
+              <ArrowRight className="w-3 h-3 text-slate-400 shrink-0" />
+              <span className="font-mono">
+                {pad(endHour)}:{pad(selectedMinute)}
+              </span>
+              {matchedSlot && (
+                <span className="hidden sm:inline text-[10px] font-medium text-slate-400 dark:text-slate-500 shrink-0 ml-0.5">
+                  ({matchedSlot.label})
                 </span>
               )}
-              <span className="text-blue-600 dark:text-blue-400 font-extrabold">
-                {formatDurationText(durationMinutes)}
-              </span>
-            </div>
-          </div>
-
-          {/* Ô nhập giờ Bắt đầu và Kết thúc */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <span className="text-xs font-semibold text-slate-500 shrink-0">Từ:</span>
-              <TimePicker24h
-                hour={startHour}
-                minute={startMinute}
-                disabled={disabled}
-                onChange={(h, m) => onChangeTime('start', h, m)}
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-150 ${
+                  isTimePopupOpen ? 'rotate-180' : ''
+                }`}
               />
+            </button>
+          </PopoverTrigger>
+
+          <PopoverContent
+            align="end"
+            side="bottom"
+            sideOffset={6}
+            collisionPadding={12}
+            className="z-70 w-[340px] sm:w-[380px] max-h-[min(260px,var(--radix-popover-content-available-height,260px))] bg-white dark:bg-[#141822] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-2.5 flex flex-col gap-2 ring-0 overflow-hidden"
+          >
+            {/* Lưới 2 Cột: Cột Trái (5 Khung Giờ) | Cột Phải (Cuộn Phút 00 -> 59) */}
+            <div className="grid grid-cols-[1.5fr_1fr] gap-2.5 min-h-0 flex-1">
+              {/* CỘT TRÁI: 5 KHUNG GIỜ (Giờ chẵn nổi bật, Giai đoạn 1..5 nhỏ tinh tế) */}
+              <div className="h-[156px] flex flex-col justify-between rounded-xl border border-slate-200/80 dark:border-slate-800 p-1 bg-slate-50/60 dark:bg-[#0B0E14]/60 gap-0.5">
+                {fiveSlots.map((slot) => {
+                  const isSlotSelected = matchedSlot?.id === slot.id;
+                  return (
+                    <button
+                      key={slot.id}
+                      type="button"
+                      onClick={() => handlePickSlot(slot)}
+                      className={`w-full flex-1 px-2 rounded-lg text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 ${
+                        isSlotSelected
+                          ? 'bg-blue-600 text-white shadow-2xs'
+                          : 'hover:bg-slate-200/60 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200'
+                      }`}
+                    >
+                      <span className="text-[11px] sm:text-xs font-mono font-extrabold tracking-tight shrink-0">
+                        {pad(slot.startHour)}:{pad(selectedMinute)} – {pad(slot.endHour)}:{pad(selectedMinute)}
+                      </span>
+                      <span
+                        className={`text-[9px] sm:text-[10px] font-medium truncate ${
+                          isSlotSelected
+                            ? 'text-blue-100/90'
+                            : 'text-slate-400 dark:text-slate-500'
+                        }`}
+                      >
+                        {slot.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* CỘT PHẢI: KHUNG CUỘN CHỌN PHÚT 00 -> 59 */}
+              <div
+                ref={minuteListRef}
+                className="h-[156px] w-full overflow-y-auto rounded-xl border border-slate-200/80 dark:border-slate-800 p-1 space-y-0.5 bg-slate-50/60 dark:bg-[#0B0E14]/60 scroll-smooth"
+              >
+                {MINUTES_60.map((m) => {
+                  const isMinSelected = selectedMinute === m;
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      data-active={isMinSelected}
+                      onClick={() => handlePickMinute(m)}
+                      className={`w-full py-1 text-xs font-mono font-bold rounded-lg transition-all cursor-pointer ${
+                        isMinSelected
+                          ? 'bg-blue-600 text-white shadow-2xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      {pad(m)} phút
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-
-            <div className="flex items-center gap-1.5 flex-1 min-w-0 justify-end">
-              <span className="text-xs font-semibold text-slate-500 shrink-0">Đến:</span>
-              <TimePicker24h
-                hour={endHour}
-                minute={endMinute}
-                disabled={disabled}
-                onChange={(h, m) => onChangeTime('end', h, m)}
-              />
-            </div>
-          </div>
-
-          {/* Presets nhanh */}
-          <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-            <span className="text-[10px] font-semibold text-slate-400 flex items-center gap-1 shrink-0">
-              <Sparkles className="w-3 h-3 text-amber-500" />
-              Chọn nhanh:
-            </span>
-
             <button
               type="button"
-              disabled={disabled}
-              onClick={() => applyPreset(22, 0, 5, 0)}
-              className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-white dark:bg-[#141824] hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+              onClick={() => setIsTimePopupOpen(false)}
+              className="w-full py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs active:scale-95 shrink-0"
             >
-              Đêm (22:00 - 05:00)
+              Xong
             </button>
-
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={() => applyPreset(6, 0, 18, 0)}
-              className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-white dark:bg-[#141824] hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-            >
-              Ngày (06:00 - 18:00)
-            </button>
-
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={() => applyPreset(10, 0, 14, 0)}
-              className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-white dark:bg-[#141824] hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-            >
-              Cao điểm (10:00 - 14:00)
-            </button>
-          </div>
-        </div>
+          </PopoverContent>
+        </Popover>
       )}
     </div>
   );

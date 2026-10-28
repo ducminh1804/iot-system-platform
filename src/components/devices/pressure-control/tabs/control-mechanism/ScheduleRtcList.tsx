@@ -1,7 +1,6 @@
 import React from 'react';
 import { AlertTriangle, ArrowRight, Wand2 } from 'lucide-react';
 import { ScheduleSlot } from '../../types';
-import { PressureStepperInput } from './PressureStepperInput';
 import { TimePicker24h } from './TimePicker24h';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -61,42 +60,25 @@ export function ScheduleRtcList({
                   : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/20'
               }`}
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
-                {/* Hàng 1 (Mobile) / Cột 1 (Desktop): Switch & Tên giai đoạn */}
-                <div className="flex items-center justify-between gap-2 sm:w-44 shrink-0">
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      id={switchId}
-                      checked={slot.enabled}
-                      onCheckedChange={(checked) =>
-                        onUpdateSchedule(slot.id, { enabled: checked })
-                      }
-                    />
-                    <label
-                      htmlFor={switchId}
-                      className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 cursor-pointer select-none"
-                    >
-                      {slot.label}
-                    </label>
-                  </div>
-
-                  {/* Trên Mobile: Stepper nằm ngay góc phải hàng 1, cực kỳ gọn gàng */}
-                  <div className="sm:hidden">
-                    <PressureStepperInput
-                      min={5}
-                      max={50}
-                      step={0.5}
-                      disabled={!slot.enabled}
-                      value={slot.targetPressure}
-                      ariaLabel={`Áp suất ${slot.label}`}
-                      onChange={(val) =>
-                        onUpdateSchedule(slot.id, { targetPressure: val })
-                      }
-                    />
-                  </div>
+              <div className="flex items-center justify-between gap-3">
+                {/* Cột 1: Switch & Tên giai đoạn */}
+                <div className="flex items-center gap-2.5 sm:w-44 shrink-0">
+                  <Switch
+                    id={switchId}
+                    checked={slot.enabled}
+                    onCheckedChange={(checked) =>
+                      onUpdateSchedule(slot.id, { enabled: checked })
+                    }
+                  />
+                  <label
+                    htmlFor={switchId}
+                    className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 cursor-pointer select-none"
+                  >
+                    {slot.label}
+                  </label>
                 </div>
 
-                {/* Hàng 2 (Mobile) / Cột 2 (Desktop): Khung giờ Bắt đầu -> Kết thúc */}
+                {/* Cột 2: Khung giờ Bắt đầu -> Kết thúc */}
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <TimePicker24h
                     hour={slot.startHour}
@@ -130,21 +112,6 @@ export function ScheduleRtcList({
                       </TooltipContent>
                     </Tooltip>
                   )}
-                </div>
-
-                {/* Trên Desktop: Stepper nằm ở cột 3 cuối dòng */}
-                <div className="hidden sm:flex items-center justify-end">
-                  <PressureStepperInput
-                    min={5}
-                    max={50}
-                    step={0.5}
-                    disabled={!slot.enabled}
-                    value={slot.targetPressure}
-                    ariaLabel={`Áp suất ${slot.label}`}
-                    onChange={(val) =>
-                      onUpdateSchedule(slot.id, { targetPressure: val })
-                    }
-                  />
                 </div>
               </div>
             </div>

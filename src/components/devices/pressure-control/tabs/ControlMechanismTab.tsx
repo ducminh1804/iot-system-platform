@@ -244,14 +244,15 @@ export function ControlMechanismTab({
         {/* 2. Cấu hình chi tiết theo chế độ đang xem */}
         {viewingMode === 'input_pressure_priority' ? (
           <div className="grid grid-cols-1 gap-4">
-            {/* CARD 1: NGƯỠNG DƯỚI */}
+            {/* CARD 1: MỨC ÁP SUẤT MIN */}
             <ThresholdCard
-              title="Ngưỡng Dưới"
+              title="Mức áp suất Min"
               icon={TrendingDown}
               iconBgClass="bg-amber-500/10 dark:bg-amber-500/15"
               iconColorClass="text-amber-500"
               accentClass="text-amber-600 dark:text-amber-400"
               config={lowerThreshold}
+              schedules={schedules}
               minAllowed={0}
               maxAllowed={lowerMaxAllowed}
               step={0.5}
@@ -259,14 +260,15 @@ export function ControlMechanismTab({
               switchId="lower-cycle-switch"
             />
 
-            {/* CARD 2: NGƯỠNG TRÊN */}
+            {/* CARD 2: MỨC ÁP SUẤT MAX */}
             <ThresholdCard
-              title="Ngưỡng Trên"
+              title="Mức áp suất Max"
               icon={TrendingUp}
               iconBgClass="bg-rose-500/10 dark:bg-rose-500/15"
               iconColorClass="text-rose-500"
               accentClass="text-rose-600 dark:text-rose-400"
               config={upperThreshold}
+              schedules={schedules}
               minAllowed={upperMinAllowed}
               maxAllowed={80}
               step={0.5}
