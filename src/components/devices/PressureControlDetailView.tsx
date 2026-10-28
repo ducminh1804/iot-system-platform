@@ -45,6 +45,8 @@ export function PressureControlDetailView({ onBack, station }: PressureControlDe
   // Trạng thái mức áp đang chọn kích hoạt:
   // 0: Đóng nước (cả 3 đồng hồ về 0) | 1: Mức áp 1 | 2: Mức áp 2 | 3: Mở full
   const [activeLevel, setActiveLevel] = useState<ActivePressureLevel>(1);
+  // Lưu mức áp hoạt động trước đó để khôi phục khi click lần 2 tắt Đóng nước
+  const [prevLevel, setPrevLevel] = useState<1 | 2 | 3>(1);
 
   // Cấu hình tham số trạm (Settings State)
   const [config, setConfig] = useState<PressureStationConfig>(DEFAULT_PRESSURE_CONFIG);
@@ -108,37 +110,69 @@ export function PressureControlDetailView({ onBack, station }: PressureControlDe
   const handleSelectLevel = (level: 1 | 2 | 3) => {
     const formatted = getFormattedNow();
     setActiveLevel(level);
+    setPrevLevel(level);
 
     if (level === 1) {
       setGaugeVal1(config.targetP1);
       setGaugeVal2(0);
       setGaugeVal3(0);
       setLastActionTimes((prev) => ({ ...prev, 1: formatted }));
-      toast.success('Đã gửi tín hiệu');
+      toast.success('Đã kích hoạt Mức áp 1');
     } else if (level === 2) {
       setGaugeVal1(0);
       setGaugeVal2(config.targetP2);
       setGaugeVal3(0);
       setLastActionTimes((prev) => ({ ...prev, 2: formatted }));
-      toast.success('Đã gửi tín hiệu');
+      toast.success('Đã kích hoạt Mức áp 2');
     } else {
       setGaugeVal1(0);
       setGaugeVal2(0);
       setGaugeVal3(config.targetP3);
       setLastActionTimes((prev) => ({ ...prev, 3: formatted }));
-      toast.success('Đã gửi tín hiệu');
+      toast.success('Đã kích hoạt Mở full');
     }
   };
 
-  // Xử lý khi click vào ô "Đóng nước": Hạ cả 3 đồng hồ về 0, chuyển activeLevel về 0
+  // Xử lý khi click vào ô "Đóng nước":
+  // - Nếu đang mở (activeLevel !== 0): Đóng nước (activeLevel = 0)
+  // - Nếu đã đang đóng (activeLevel === 0): Click lần 2 sẽ tắt đóng nước, mở lại mức áp trước đó!
   const handleShutoffWater = () => {
     const formatted = getFormattedNow();
-    setActiveLevel(0);
-    setGaugeVal1(0);
-    setGaugeVal2(0);
-    setGaugeVal3(0);
-    setLastActionTimes((prev) => ({ ...prev, 4: formatted }));
-    toast.success('Đã gửi tín hiệu');
+
+    if (activeLevel === 0) {
+      // Click lần 2: Tắt chế độ đóng nước, khôi phục lại mức áp trước đó
+      const resumeLevel = prevLevel || 1;
+      setActiveLevel(resumeLevel);
+
+      if (resumeLevel === 1) {
+        setGaugeVal1(config.targetP1);
+        setGaugeVal2(0);
+        setGaugeVal3(0);
+        setLastActionTimes((prev) => ({ ...prev, 1: formatted }));
+        toast.success('Đã mở nước lại (Mức áp 1)');
+      } else if (resumeLevel === 2) {
+        setGaugeVal1(0);
+        setGaugeVal2(config.targetP2);
+        setGaugeVal3(0);
+        setLastActionTimes((prev) => ({ ...prev, 2: formatted }));
+        toast.success('Đã mở nước lại (Mức áp 2)');
+      } else {
+        setGaugeVal1(0);
+        setGaugeVal2(0);
+        setGaugeVal3(config.targetP3);
+        setLastActionTimes((prev) => ({ ...prev, 3: formatted }));
+        toast.success('Đã mở nước lại (Mở full)');
+      }
+    } else {
+      // Đang chạy bình thường -> Click để Đóng nước
+      setPrevLevel(activeLevel);
+      setActiveLevel(0);
+      setGaugeVal1(0);
+      setGaugeVal2(0);
+      setGaugeVal3(0);
+      setLastActionTimes((prev) => ({ ...prev, 4: formatted }));
+      toast.success('Đã đóng nước trạm');
+    }
   };
 
   // Lưu cấu hình từ modal cài đặt

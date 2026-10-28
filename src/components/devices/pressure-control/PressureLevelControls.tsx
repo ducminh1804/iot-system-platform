@@ -221,13 +221,20 @@ export function PressureLevelControls({
         </div>
       </div>
 
-      {/* Card 4: Đóng nước */}
+      {/* Card 4: Đóng nước (Hỗ trợ click lần 2 để mở lại nước về mức trước đó) */}
       <div
         role={readOnly ? undefined : 'button'}
         tabIndex={readOnly ? -1 : 0}
         onClick={readOnly ? undefined : onShutoffWater}
         onKeyDown={readOnly ? undefined : (e) => e.key === 'Enter' && onShutoffWater?.()}
-        className={`h-[110px] sm:h-[142px] lg:h-[180px] rounded-[14px] sm:rounded-[20px] lg:rounded-[22px] p-1.5 sm:p-2.5 lg:p-3 shadow-xs flex flex-col items-center justify-between transition-all duration-300 overflow-hidden ${
+        title={
+          readOnly
+            ? undefined
+            : activeLevel === 0
+            ? 'Đang đóng nước. Bấm để mở lại nước về mức áp trước đó'
+            : 'Bấm để đóng nước trạm'
+        }
+        className={`h-[110px] sm:h-[142px] lg:h-[180px] rounded-[14px] sm:rounded-[20px] lg:rounded-[22px] p-1.5 sm:p-2.5 lg:p-3 shadow-xs flex flex-col items-center justify-between transition-all duration-300 overflow-hidden select-none active:scale-95 ${
           readOnly ? 'cursor-default pointer-events-none' : 'cursor-pointer'
         } ${
           activeLevel === 0

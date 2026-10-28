@@ -29,11 +29,11 @@ export type SettingsTabId =
   | 'calibration';
 
 const SETTINGS_TABS: WaveTabItem<SettingsTabId>[] = [
-  { id: 'control', label: 'Cơ chế điều khiển', icon: SlidersHorizontal, accentColor: 'text-orange-500' },
-  { id: 'pulse_meter', label: 'Đồng hồ xung', icon: Droplets, accentColor: 'text-blue-500' },
-  { id: 'flow_alarms', label: 'Cảnh báo bất thường', icon: Waves, accentColor: 'text-cyan-500' },
-  { id: 'alarms', label: 'Cảnh báo nguồn & Pin', icon: Zap, accentColor: 'text-amber-500' },
-  { id: 'calibration', label: 'Calib cảm biến', icon: Gauge, accentColor: 'text-indigo-500' },
+  { id: 'control', label: 'Cơ chế điều khiển', shortLabel: 'Điều khiển', icon: SlidersHorizontal, accentColor: 'text-orange-500' },
+  { id: 'pulse_meter', label: 'Đồng hồ xung', shortLabel: 'Đồng hồ', icon: Droplets, accentColor: 'text-blue-500' },
+  { id: 'flow_alarms', label: 'Cảnh báo dị thường', shortLabel: 'Dị thường', icon: Waves, accentColor: 'text-cyan-500' },
+  { id: 'alarms', label: 'Nguồn & Pin', shortLabel: 'Nguồn & Pin', icon: Zap, accentColor: 'text-amber-500' },
+  { id: 'calibration', label: 'Hiệu chuẩn cảm biến', shortLabel: 'Hiệu chuẩn', icon: Gauge, accentColor: 'text-indigo-500' },
 ];
 
 type PendingNavigationAction =
@@ -250,25 +250,25 @@ export function PressureSettingsModal({
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 1. Modal Header */}
-        <div className="shrink-0 px-3 sm:px-8 py-2.5 sm:py-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2 sm:gap-3 bg-slate-50/80 dark:bg-[#151924]/80 backdrop-blur-sm">
+        {/* 1. Modal Header - Chuẩn Industrial SCADA, sạch sẽ, không text thừa thãi */}
+        <div className="shrink-0 px-3 sm:px-6 py-2.5 sm:py-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2 bg-slate-50/80 dark:bg-[#151924]/80 backdrop-blur-sm">
           {!isEditingMeta ? (
-            <div className="flex items-center gap-2.5 sm:gap-4 min-w-0 flex-1">
-              <div className="hidden sm:flex p-2 sm:p-2.5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-500/20 text-blue-600 dark:text-blue-400 shrink-0">
-                <SlidersHorizontal className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 mr-1">
+              <div className="hidden md:flex p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-500/20 text-blue-600 dark:text-blue-400 shrink-0">
+                <SlidersHorizontal className="w-5 h-5" />
               </div>
 
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap">
-                  <h3 className="text-sm sm:text-lg lg:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate max-w-[150px] sm:max-w-none">
-                    {stationMeta.name}
-                  </h3>
+              <div className="min-w-0 flex-1 flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
+                <h3 className="text-sm sm:text-base lg:text-lg font-bold text-slate-900 dark:text-white tracking-tight truncate max-w-full">
+                  {stationMeta.name}
+                </h3>
 
-                  <span className="px-2 py-0.5 rounded-md text-[11px] sm:text-xs font-mono font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">
-                    ID: {stationMeta.stationId}
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    #{stationMeta.stationId}
                   </span>
 
-                  <span className="hidden xs:inline px-2 py-0.5 rounded-md text-[11px] sm:text-xs font-mono font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                  <span className="px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] font-mono font-semibold bg-slate-200/80 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                     {stationMeta.version}
                   </span>
 
@@ -281,10 +281,6 @@ export function PressureSettingsModal({
                     <Pencil className="w-3.5 h-3.5" />
                   </button>
                 </div>
-
-                <p className="hidden sm:block text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5">
-                  Cài đặt thông số cấu hình và định danh thiết bị
-                </p>
               </div>
             </div>
           ) : (
@@ -344,25 +340,24 @@ export function PressureSettingsModal({
             </form>
           )}
 
-          {/* Cụm nút Hành động Chung: Bỏ thay đổi & Lưu 1 lần cho toàn bộ Modal */}
+          {/* Cụm nút Hành động Chung: Bỏ thay đổi, Lưu 1 lần, Đóng Modal */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {isDirty && (
               <button
                 type="button"
                 onClick={handleDiscardChanges}
-                className="h-8 sm:h-9 px-2.5 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1 cursor-pointer active:scale-95 transition-all animate-in fade-in duration-150"
+                className="h-8 sm:h-9 px-2 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1 cursor-pointer active:scale-95 transition-all animate-in fade-in duration-150"
                 title="Hủy các thay đổi chưa lưu"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
-                <span className="hidden xs:inline">Bỏ thay đổi</span>
-                <span className="xs:hidden">Bỏ</span>
+                <span className="hidden sm:inline">Bỏ thay đổi</span>
               </button>
             )}
 
             <button
               type="button"
               onClick={handleCommitSave}
-              className={`relative h-8 sm:h-9 px-3 sm:px-4 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all ${
+              className={`relative h-8 sm:h-9 px-2.5 sm:px-4 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all ${
                 isDirty
                   ? 'bg-blue-600 hover:bg-blue-700 text-white ring-2 ring-blue-500/30'
                   : 'bg-blue-600 hover:bg-blue-700 text-white'
@@ -379,10 +374,10 @@ export function PressureSettingsModal({
             <button
               type="button"
               onClick={handleRequestClose}
-              className="p-1.5 sm:p-2.5 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center justify-center transition-colors cursor-pointer"
               title="Đóng (Thoát)"
             >
-              <X className="w-5 h-5 sm:w-6 sm:h-6" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>

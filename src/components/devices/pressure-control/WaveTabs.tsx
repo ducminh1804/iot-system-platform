@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 export interface WaveTabItem<T extends string = string> {
   id: T;
   label: string;
+  /** Nhãn ngắn gọn hiển thị trên màn hình hẹp (mobile) để tránh tràn / cụt chữ */
+  shortLabel?: string;
   icon: React.ComponentType<{ className?: string }>;
   /** Màu icon khi tab đang được chọn */
   accentColor?: string;
@@ -91,7 +93,16 @@ export function WaveTabs<T extends string>({ tabs, activeId, onChange }: WaveTab
                     : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'
                 }`}
               />
-              <span className="whitespace-nowrap">{tab.label}</span>
+              <span className="whitespace-nowrap">
+                {tab.shortLabel ? (
+                  <>
+                    <span className="sm:hidden">{tab.shortLabel}</span>
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </>
+                ) : (
+                  tab.label
+                )}
+              </span>
 
               {/* Đường line ở chân tab trượt mượt mà (Animated Underline Indicator) */}
               {isActive && (
