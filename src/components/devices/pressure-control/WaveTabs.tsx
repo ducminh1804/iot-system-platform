@@ -1,4 +1,5 @@
-import React, { useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 
 export interface WaveTabItem<T extends string = string> {
   id: T;
@@ -14,23 +15,17 @@ interface WaveTabsProps<T extends string> {
   onChange: (id: NoInfer<T>) => void;
 }
 
-/** Độ rộng của mỗi vai cong (S-curve) hai bên tab đang chọn */
-const SHOULDER = 30;
-const BAR_HEIGHT = 56;
-
 /**
- * Thanh tab lượn sóng: một khối trắng duy nhất trượt (transform + width)
- * tới tab đang chọn. Hai vai cong có kích thước cố định nên không bị méo,
- * phần giữa co giãn theo độ rộng tab.
- * Tự động scroll mượt tab đang chọn vào vùng nhìn thấy (đặc biệt tối ưu trên mobile).
+ * Thanh tab tối giản chuẩn công nghiệp (underline active indicator):
+ * - Bung hết toàn bộ chiều rộng (w-full), chia đều tỷ lệ bằng nhau (flex-1) giữa các tab.
+ * - Căn giữa nội dung icon và label trong từng tab.
+ * - Đường line chỉ báo hoạt động (indicator) ở chân trượt mượt mà bằng framer-motion layoutId.
  */
 export function WaveTabs<T extends string>({ tabs, activeId, onChange }: WaveTabsProps<T>) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const indicatorRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  // Tự động căn giữa tab được chọn trong thanh cuộn ngang khi trên màn hình hẹp (mobile)
+  // Tự động căn giữa tab được chọn trong thanh cuộn ngang khi trên màn hình quá hẹp (mobile)
   const scrollToTab = (tabId: T, smooth = true) => {
     const container = containerRef.current;
     const btn = buttonRefs.current[tabId];
@@ -50,75 +45,23 @@ export function WaveTabs<T extends string>({ tabs, activeId, onChange }: WaveTab
   };
 
   useEffect(() => {
-    // Delay ngắn để đảm bảo render layout hoàn tất trước khi tính toán vị trí cuộn
     const timer = setTimeout(() => {
       scrollToTab(activeId, true);
     }, 60);
     return () => clearTimeout(timer);
   }, [activeId]);
 
-  useLayoutEffect(() => {
-    const place = () => {
-      const btn = buttonRefs.current[activeId];
-      const indicator = indicatorRef.current;
-      if (!btn || !indicator) return;
-      indicator.style.width = `${btn.offsetWidth + SHOULDER * 2}px`;
-      indicator.style.transform = `translate3d(${btn.offsetLeft - SHOULDER}px, 0, 0)`;
-    };
-
-    place();
-
-    const track = trackRef.current;
-    if (!track || typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(place);
-    observer.observe(track);
-    Object.values(buttonRefs.current).forEach((b) => b && observer.observe(b));
-    return () => observer.disconnect();
-  }, [activeId, tabs]);
-
   return (
     <div
       ref={containerRef}
-      className="shrink-0 bg-blue-600 dark:bg-blue-700 overflow-x-auto overflow-y-hidden select-none scroll-smooth"
+      className="shrink-0 w-full bg-white dark:bg-[#12151E] border-b border-slate-200 dark:border-slate-800 overflow-x-auto overflow-y-hidden select-none scroll-smooth"
       style={{
-        height: BAR_HEIGHT,
         scrollbarWidth: 'none',
         WebkitOverflowScrolling: 'touch',
       }}
       role="tablist"
     >
-      <div
-        ref={trackRef}
-        className="relative h-full flex items-end gap-2 sm:gap-4 px-10 sm:px-12 w-max min-w-full"
-      >
-        {/* Khối sóng trắng trượt */}
-        <div
-          ref={indicatorRef}
-          aria-hidden
-          className="absolute left-0 bottom-0 flex items-stretch text-white dark:text-[#12151E] pointer-events-none will-change-transform transition-[transform,width] duration-300 ease-[cubic-bezier(0.3,0.9,0.3,1)]"
-          style={{ height: BAR_HEIGHT - 8, width: 0 }}
-        >
-          <svg
-            className="shrink-0 h-full"
-            width={SHOULDER}
-            viewBox={`0 0 ${SHOULDER} 100`}
-            preserveAspectRatio="none"
-            fill="currentColor"
-          >
-            <path d={`M0,100 C${SHOULDER * 0.55},100 ${SHOULDER * 0.45},0 ${SHOULDER},0 L${SHOULDER},100 Z`} />
-          </svg>
-          <div className="flex-1 min-w-0 bg-current" />
-          <svg
-            className="shrink-0 h-full"
-            width={SHOULDER}
-            viewBox={`0 0 ${SHOULDER} 100`}
-            preserveAspectRatio="none"
-            fill="currentColor"
-          >
-            <path d={`M${SHOULDER},100 C${SHOULDER * 0.45},100 ${SHOULDER * 0.55},0 0,0 L0,100 Z`} />
-          </svg>
-        </div>
-
+      <div className="relative flex items-center w-full min-w-full px-2 sm:px-6">
         {tabs.map((tab) => {
           const isActive = tab.id === activeId;
           const Icon = tab.icon;
@@ -135,19 +78,33 @@ export function WaveTabs<T extends string>({ tabs, activeId, onChange }: WaveTab
                 onChange(tab.id);
                 scrollToTab(tab.id, true);
               }}
-              style={{ height: BAR_HEIGHT - 8 }}
-              className={`relative z-10 shrink-0 flex items-center gap-2 px-3 sm:px-4 text-xs sm:text-sm whitespace-nowrap cursor-pointer transition-colors duration-200 ${
+              className={`group relative shrink-0 md:flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2.5 sm:py-3.5 text-xs sm:text-sm whitespace-nowrap cursor-pointer transition-colors duration-200 outline-none select-none rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/40 ${
                 isActive
-                  ? 'text-slate-900 dark:text-white font-extrabold'
-                  : 'text-white/85 hover:text-white font-semibold'
+                  ? 'text-blue-600 dark:text-blue-400 font-bold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
               }`}
             >
               <Icon
                 className={`w-4 h-4 shrink-0 transition-colors duration-200 ${
-                  isActive ? tab.accentColor ?? '' : ''
+                  isActive
+                    ? tab.accentColor ?? 'text-blue-600 dark:text-blue-400'
+                    : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'
                 }`}
               />
-              <span>{tab.label}</span>
+              <span className="whitespace-nowrap">{tab.label}</span>
+
+              {/* Đường line ở chân tab trượt mượt mà (Animated Underline Indicator) */}
+              {isActive && (
+                <motion.div
+                  layoutId="active-tab-underline"
+                  className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-blue-600 dark:bg-blue-400 rounded-full z-10"
+                  transition={{
+                    type: 'spring',
+                    stiffness: 450,
+                    damping: 35,
+                  }}
+                />
+              )}
             </button>
           );
         })}
@@ -155,3 +112,7 @@ export function WaveTabs<T extends string>({ tabs, activeId, onChange }: WaveTab
     </div>
   );
 }
+
+
+
+

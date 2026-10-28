@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   RotateCcw,
-  Save,
   Plus,
   Minus,
   Calendar,
@@ -44,7 +43,6 @@ export function AnomalyAlarmTab({
   config,
   stationMeta = { name: 'Trạm áp lực', stationId: '1015', version: 'v1' },
   onChangeConfig,
-  onSave,
 }: AnomalyAlarmTabProps) {
   const anomaly: AnomalyAlarmConfig =
     config.anomalyAlarm ?? DEFAULT_ANOMALY_ALARM_CONFIG;
@@ -100,19 +98,6 @@ export function AnomalyAlarmTab({
     });
     setShowGlobalResetConfirm(false);
     toast.error('Đã reset toàn bộ hệ thống thiết bị.');
-  };
-
-  const handleResetDefaults = () => {
-    onChangeConfig((prev) => ({
-      ...prev,
-      anomalyAlarm: { ...DEFAULT_ANOMALY_ALARM_CONFIG },
-    }));
-    toast.info('Đã khôi phục cài đặt mặc định');
-  };
-
-  const handleSave = () => {
-    if (onSave) onSave();
-    else toast.success('Đã lưu cấu hình');
   };
 
   const isLearning = anomaly.learningDaysCompleted < anomaly.learningDaysRequired;
@@ -408,27 +393,6 @@ export function AnomalyAlarmTab({
           )}
         </div>
       </section>
-
-      {/* 5. NÚT LƯU & MẶC ĐỊNH */}
-      <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800">
-        <button
-          type="button"
-          onClick={handleResetDefaults}
-          className="w-full sm:w-auto h-11 px-5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
-        >
-          <RotateCcw className="w-4 h-4 text-slate-400" />
-          <span>Mặc định</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={handleSave}
-          className="w-full sm:w-auto h-11 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xs cursor-pointer active:scale-95 transition-all"
-        >
-          <Save className="w-4 h-4" />
-          <span>Lưu cấu hình</span>
-        </button>
-      </div>
     </div>
   );
 }

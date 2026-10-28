@@ -91,6 +91,38 @@ export interface AnomalyAlarmConfig {
   lastResetTime?: string; // Thời điểm reset gần nhất
 }
 
+export type ControlModeId = 'schedule_rtc' | 'input_pressure_priority';
+
+export interface ScheduleSlot {
+  id: number;
+  label: string;
+  startHour: number;
+  startMinute: number;
+  endHour: number;
+  endMinute: number;
+  targetPressure: number;
+  enabled: boolean;
+}
+
+export interface ThresholdConfig {
+  value: number;
+  triggerScope: 'all_time' | 'custom_window';
+  startHour: number;
+  startMinute: number;
+  endHour: number;
+  endMinute: number;
+  useCycles: boolean;
+  cycleCount: number;
+  cycleMinutes: number;
+}
+
+export interface ControlMechanismConfig {
+  activeMode: ControlModeId;
+  schedules: ScheduleSlot[];
+  lowerThreshold: ThresholdConfig;
+  upperThreshold: ThresholdConfig;
+}
+
 export interface PressureStationConfig {
   targetP1: number;
   targetP2: number;
@@ -107,6 +139,7 @@ export interface PressureStationConfig {
   autoShutoff: boolean;
   rtcAutoSync: boolean;
   lowBattery: number;
+  controlMechanism?: ControlMechanismConfig;
   solarBattery?: SolarBatteryConfig;
   loggerBattery?: LoggerBatteryConfig;
   pulseMeter?: PulseMeterConfig;

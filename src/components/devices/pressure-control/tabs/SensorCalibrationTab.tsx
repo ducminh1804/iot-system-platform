@@ -1,5 +1,5 @@
 import React from 'react';
-import { RotateCcw, Save, Plus, Minus, Crosshair } from 'lucide-react';
+import { Plus, Minus, Crosshair } from 'lucide-react';
 import { Slider as SliderPrimitive } from 'radix-ui';
 import { toast } from 'sonner';
 import { PressureStationConfig, SensorCalibrationConfig, CalibrationLevelConfig } from '../types';
@@ -29,7 +29,6 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
 export function SensorCalibrationTab({
   config,
   onChangeConfig,
-  onSave,
   currentPressureIn,
   currentPressureOut,
 }: SensorCalibrationTabProps) {
@@ -87,27 +86,6 @@ export function SensorCalibrationTab({
     }
     const converted = calib.unit === 'bar' ? live / 10 : live;
     setLevelValue(key, converted);
-  };
-
-  const handleReset = () => {
-    onChangeConfig((prev) => ({
-      ...prev,
-      sensorCalibration: { ...DEFAULT_SENSOR_CALIBRATION_CONFIG },
-    }));
-    toast.info('Đã khôi phục mặc định');
-  };
-
-  const handleSave = () => {
-    if (calib.rangeMax <= calib.rangeMin) {
-      toast.error('Max phải lớn hơn Min');
-      return;
-    }
-    if (calib.level1.value === undefined || isNaN(calib.level1.value)) {
-      toast.error('Mức áp 1 là bắt buộc');
-      return;
-    }
-    if (onSave) onSave();
-    else toast.success('Đã lưu calib cảm biến');
   };
 
   const sliderValues = level2On
@@ -284,27 +262,6 @@ export function SensorCalibrationTab({
           );
         })}
       </section>
-
-      {/* Hành động */}
-      <div className="mt-auto pt-4 flex flex-col-reverse sm:flex-row items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800">
-        <button
-          type="button"
-          onClick={handleReset}
-          className="w-full sm:w-auto h-11 px-5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
-        >
-          <RotateCcw className="w-4 h-4" />
-          Mặc định
-        </button>
-
-        <button
-          type="button"
-          onClick={handleSave}
-          className="w-full sm:w-auto h-11 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold flex items-center justify-center gap-2 shadow-xs cursor-pointer active:scale-95 transition-all"
-        >
-          <Save className="w-4 h-4" />
-          Lưu
-        </button>
-      </div>
     </div>
   );
 }

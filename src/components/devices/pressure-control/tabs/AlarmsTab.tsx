@@ -4,7 +4,6 @@ import {
   Battery,
   AlertTriangle,
   HelpCircle,
-  Save,
   CheckCircle2,
   Server,
   Radio,
@@ -61,7 +60,6 @@ const SERVER_PROTOCOLS: { id: ServerAlertProtocol; label: string }[] = [
 export function AlarmsTab({
   config,
   onChangeConfig,
-  onSave,
   currentSolarVoltage = 12.46,
   currentLoggerVoltage = 3.60,
 }: AlarmsTabProps) {
@@ -112,7 +110,7 @@ export function AlarmsTab({
 
   return (
     <TooltipProvider>
-      <div className="flex-1 flex flex-col justify-between gap-6">
+      <div className="flex-1 flex flex-col justify-between gap-6 max-w-5xl mx-auto w-full py-1">
         {/* Lưới 2 khối: Pin Solar (Trái) & Pin Logger (Phải) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
           {/* Card 1: Nguồn Pin Solar (Nguồn chính trạm) */}
@@ -565,20 +563,6 @@ export function AlarmsTab({
             </div>
           </div>
         </div>
-
-        {/* Nút lưu cấu hình */}
-        {onSave && (
-          <div className="flex items-center justify-end pt-2 pb-1">
-            <button
-              type="button"
-              onClick={onSave}
-              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-xs cursor-pointer active:scale-95 transition-all"
-            >
-              <Save className="w-4 h-4" />
-              <span>Lưu cấu hình cảnh báo</span>
-            </button>
-          </div>
-        )}
       </div>
     </TooltipProvider>
   );

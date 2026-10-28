@@ -147,8 +147,7 @@ export function PressureControlDetailView({ onBack, station }: PressureControlDe
     else if (activeLevel === 2) setGaugeVal2(config.targetP2);
     else if (activeLevel === 3) setGaugeVal3(config.targetP3);
 
-    toast.success('Đã gửi tín hiệu');
-    setIsSettingsOpen(false);
+    toast.success('Đã lưu cấu hình trạm thành công');
   };
 
   // Khôi phục mặc định

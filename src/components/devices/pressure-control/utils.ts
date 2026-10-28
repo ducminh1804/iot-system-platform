@@ -6,6 +6,7 @@ import {
   SensorCalibrationConfig,
   FlowAlarmConfig,
   AnomalyAlarmConfig,
+  ControlMechanismConfig,
 } from './types';
 
 /**
@@ -109,6 +110,84 @@ export const DEFAULT_ANOMALY_ALARM_CONFIG: AnomalyAlarmConfig = {
   lastResetTime: '21-10-2026 08:00',
 };
 
+export const DEFAULT_CONTROL_MECHANISM_CONFIG: ControlMechanismConfig = {
+  activeMode: 'input_pressure_priority',
+  schedules: [
+    {
+      id: 1,
+      label: 'Giai đoạn 1',
+      startHour: 5,
+      startMinute: 0,
+      endHour: 8,
+      endMinute: 30,
+      targetPressure: 28.5,
+      enabled: true,
+    },
+    {
+      id: 2,
+      label: 'Giai đoạn 2',
+      startHour: 8,
+      startMinute: 30,
+      endHour: 11,
+      endMinute: 30,
+      targetPressure: 24.0,
+      enabled: true,
+    },
+    {
+      id: 3,
+      label: 'Giai đoạn 3',
+      startHour: 11,
+      startMinute: 30,
+      endHour: 17,
+      endMinute: 0,
+      targetPressure: 22.0,
+      enabled: true,
+    },
+    {
+      id: 4,
+      label: 'Giai đoạn 4',
+      startHour: 17,
+      startMinute: 0,
+      endHour: 22,
+      endMinute: 0,
+      targetPressure: 32.0,
+      enabled: true,
+    },
+    {
+      id: 5,
+      label: 'Giai đoạn 5',
+      startHour: 22,
+      startMinute: 0,
+      endHour: 5,
+      endMinute: 0,
+      targetPressure: 18.0,
+      enabled: true,
+    },
+  ],
+  lowerThreshold: {
+    value: 15.0,
+    triggerScope: 'all_time',
+    startHour: 6,
+    startMinute: 0,
+    endHour: 18,
+    endMinute: 0,
+    useCycles: true,
+    cycleCount: 3,
+    cycleMinutes: 5,
+  },
+  upperThreshold: {
+    value: 45.0,
+    triggerScope: 'all_time',
+    startHour: 18,
+    startMinute: 0,
+    endHour: 23,
+    endMinute: 0,
+    useCycles: true,
+    cycleCount: 3,
+    cycleMinutes: 5,
+  },
+};
+
 export const DEFAULT_PRESSURE_CONFIG: PressureStationConfig = {
   targetP1: 27.8,
   targetP2: 50.0,
@@ -125,6 +204,7 @@ export const DEFAULT_PRESSURE_CONFIG: PressureStationConfig = {
   autoShutoff: true,
   rtcAutoSync: true,
   lowBattery: 11.5,
+  controlMechanism: DEFAULT_CONTROL_MECHANISM_CONFIG,
   solarBattery: DEFAULT_SOLAR_BATTERY_CONFIG,
   loggerBattery: DEFAULT_LOGGER_BATTERY_CONFIG,
   pulseMeter: DEFAULT_PULSE_METER_CONFIG,

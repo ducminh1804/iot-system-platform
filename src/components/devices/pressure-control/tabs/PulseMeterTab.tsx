@@ -5,13 +5,10 @@ import {
   Activity,
   ArrowUpRight,
   ArrowDownLeft,
-  Save,
-  RotateCcw,
   Plus,
   Minus,
   Radio,
 } from 'lucide-react';
-import { toast } from 'sonner';
 import { PressureStationConfig, PulseMeterConfig } from '../types';
 import { DEFAULT_PULSE_METER_CONFIG, formatVNNumber } from '../utils';
 
@@ -29,7 +26,6 @@ type PulseNumericKey = 'pulsesPerUnit' | 'flowRate' | 'netFlowTotal' | 'forwardF
 export function PulseMeterTab({
   config,
   onChangeConfig,
-  onSave,
   currentFlowRate,
 }: PulseMeterTabProps) {
   const meter: PulseMeterConfig = config.pulseMeter ?? DEFAULT_PULSE_METER_CONFIG;
@@ -58,22 +54,6 @@ export function PulseMeterTab({
     const current = Number(meter[key] ?? 0);
     const next = Math.max(0, parseFloat((current + delta).toFixed(precision)));
     updateField(key, next);
-  };
-
-  const handleResetDefaults = () => {
-    onChangeConfig((prev) => ({
-      ...prev,
-      pulseMeter: { ...DEFAULT_PULSE_METER_CONFIG },
-    }));
-    toast.info('Đã khôi phục thông số đồng hồ xung về mặc định');
-  };
-
-  const handleSave = () => {
-    if (onSave) {
-      onSave();
-    } else {
-      toast.success('Đã lưu cấu hình thiết lập đồng hồ xung');
-    }
   };
 
   return (
@@ -461,27 +441,6 @@ export function PulseMeterTab({
             </div>
           </div>
         </div>
-      </div>
-
-      {/* 3. Action Footer Bar: Đầy đủ nút Lưu và Khôi phục */}
-      <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800">
-        <button
-          type="button"
-          onClick={handleResetDefaults}
-          className="w-full sm:w-auto h-11 px-5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
-        >
-          <RotateCcw className="w-4 h-4 text-slate-400" />
-          <span>Khôi phục mặc định</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={handleSave}
-          className="w-full sm:w-auto h-11 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xs cursor-pointer active:scale-95 transition-all"
-        >
-          <Save className="w-4 h-4" />
-          <span>Lưu cấu hình</span>
-        </button>
       </div>
     </div>
   );
