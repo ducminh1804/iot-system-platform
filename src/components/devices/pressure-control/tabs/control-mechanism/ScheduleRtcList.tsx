@@ -1,7 +1,7 @@
 import React from 'react';
-import { AlertTriangle, ArrowRight, Wand2 } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { ScheduleSlot } from '../../types';
-import { TimePicker24h } from './TimePicker24h';
+import { TimeWindowPopoverPicker } from './TimeWindowPopoverPicker';
 import { Switch } from '@/components/ui/switch';
 import {
   Tooltip,
@@ -13,33 +13,23 @@ interface ScheduleRtcListProps {
   schedules: ScheduleSlot[];
   overlappingIds: Set<number>;
   onUpdateSchedule: (slotId: number, patch: Partial<ScheduleSlot>) => void;
-  onAutoChainSchedules: () => void;
+  onAutoChainSchedules?: () => void;
 }
 
 export function ScheduleRtcList({
   schedules,
   overlappingIds,
   onUpdateSchedule,
-  onAutoChainSchedules,
 }: ScheduleRtcListProps) {
   return (
     <div className="space-y-3">
-      {/* Nút hỗ trợ giải quyết xung đột thời gian (1-click Nối tiếp khung giờ) */}
+      {/* Banner cảnh báo phát hiện khung giờ bị chồng lấn giữa các giai đoạn */}
       {overlappingIds.size > 0 && (
-        <div className="flex items-center justify-between p-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
-          <div className="flex items-center gap-2 text-xs font-bold">
-            <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500" />
-            <span>Phát hiện khung giờ bị chồng lấn giữa các giai đoạn</span>
-          </div>
-
-          <button
-            type="button"
-            onClick={onAutoChainSchedules}
-            className="h-8 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs active:scale-95 shrink-0"
-          >
-            <Wand2 className="w-3.5 h-3.5" />
-            <span>Nối tiếp khung giờ</span>
-          </button>
+        <div className="flex items-center gap-2.5 p-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+          <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500" />
+          <span className="text-xs font-bold">
+            Phát hiện khung giờ bị chồng lấn giữa các giai đoạn
+          </span>
         </div>
       )}
 
@@ -78,25 +68,22 @@ export function ScheduleRtcList({
                   </label>
                 </div>
 
-                {/* Cột 2: Khung giờ Bắt đầu -> Kết thúc */}
+                {/* Cột 2: Khung giờ Bắt đầu -> Kết thúc (Dùng chung TimeWindowPopoverPicker đồng bộ như chế độ kia) */}
                 <div className="flex items-center gap-1.5 sm:gap-2">
-                  <TimePicker24h
-                    hour={slot.startHour}
-                    minute={slot.startMinute}
+                  <TimeWindowPopoverPicker
+                    startHour={slot.startHour}
+                    startMinute={slot.startMinute}
+                    endHour={slot.endHour}
+                    endMinute={slot.endMinute}
+                    schedules={schedules}
                     disabled={!slot.enabled}
-                    onChange={(h, m) =>
-                      onUpdateSchedule(slot.id, { startHour: h, startMinute: m })
-                    }
-                  />
-
-                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-
-                  <TimePicker24h
-                    hour={slot.endHour}
-                    minute={slot.endMinute}
-                    disabled={!slot.enabled}
-                    onChange={(h, m) =>
-                      onUpdateSchedule(slot.id, { endHour: h, endMinute: m })
+                    onChange={(sh, sm, eh, em) =>
+                      onUpdateSchedule(slot.id, {
+                        startHour: sh,
+                        startMinute: sm,
+                        endHour: eh,
+                        endMinute: em,
+                      })
                     }
                   />
 

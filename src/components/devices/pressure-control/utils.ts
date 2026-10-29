@@ -53,9 +53,11 @@ export const DEFAULT_PULSE_METER_CONFIG: PulseMeterConfig = {
   pulseUnit: 'pulse_per_m3',
   flowRate: 5,
   flowRateUnit: 'm3_h',
-  netFlowTotal: 100,
+  netFlowTotal: 20,
   forwardFlow: 60,
   reserveFlow: 40,
+  forwardPulses: 600,
+  reversePulses: 400,
 };
 
 export const DEFAULT_SENSOR_CALIBRATION_CONFIG: SensorCalibrationConfig = {

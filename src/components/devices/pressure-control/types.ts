@@ -31,13 +31,15 @@ export interface LoggerBatteryConfig {
 export type PulseUnitType = 'liter_per_pulse' | 'pulse_per_m3' | 'm3_per_pulse';
 
 export interface PulseMeterConfig {
-  pulsesPerUnit: number; // Pluses per unit volume (p/m³)
+  pulsesPerUnit: number; // Pulses per unit volume (p/m³)
   pulseUnit?: PulseUnitType; // Đơn vị hệ số xung
-  flowRate: number; // Flow Rate (m³/h)
+  flowRate?: number; // Flow Rate (m³/h)
   flowRateUnit?: 'm3_h' | 'l_s'; // Đơn vị lưu lượng
-  netFlowTotal: number; // Net Flow Total (m³)
-  forwardFlow: number; // Forward Flow (m³)
-  reserveFlow: number; // Reserve Flow (m³)
+  netFlowTotal?: number; // Net Flow Total (m³)
+  forwardFlow: number; // Forward Total (m³)
+  reserveFlow: number; // Reverse Total (m³)
+  forwardPulses?: number; // Forward Pulses (pulses)
+  reversePulses?: number; // Reverse Pulses (pulses)
   debounceFilterMs?: number; // Lọc dội xung (ms)
   cutoffMinFlowRate?: number; // Lưu lượng cắt điểm 0 (m³/h)
 }

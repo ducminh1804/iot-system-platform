@@ -189,29 +189,6 @@ export function ControlMechanismTab({
     });
   };
 
-  const handleAutoChainSchedules = () => {
-    updateControlMechanism((prev) => {
-      const next = [...prev.schedules];
-      const enabledIndices = next
-        .map((s, i) => (s.enabled ? i : -1))
-        .filter((i) => i !== -1);
-
-      if (enabledIndices.length <= 1) return prev;
-
-      for (let k = 0; k < enabledIndices.length; k++) {
-        const currIdx = enabledIndices[k];
-        const nextIdx = enabledIndices[(k + 1) % enabledIndices.length];
-        next[nextIdx] = {
-          ...next[nextIdx],
-          startHour: next[currIdx].endHour,
-          startMinute: next[currIdx].endMinute,
-        };
-      }
-      toast.success('Đã tự động nối tiếp khung giờ giữa các giai đoạn');
-      return { ...prev, schedules: next };
-    });
-  };
-
   const lowerMaxAllowed = Math.min(
     50,
     Number((upperThreshold.value - MIN_PRESSURE_GAP).toFixed(1))
@@ -282,7 +259,6 @@ export function ControlMechanismTab({
             schedules={schedules}
             overlappingIds={overlappingIds}
             onUpdateSchedule={updateSchedule}
-            onAutoChainSchedules={handleAutoChainSchedules}
           />
         )}
       </div>
