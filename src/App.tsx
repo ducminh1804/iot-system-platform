@@ -10,10 +10,12 @@ import { TimeRange } from '@/types/dashboard';
 import { X } from 'lucide-react';
 
 import { DeviceHubView } from '@/components/devices/DeviceHubView';
+import { PWAReloadPrompt } from '@/components/pwa-reload-prompt';
 
 export default function App() {
   return (
     <ThemeProvider>
+      <PWAReloadPrompt />
       <DashboardLayout />
       <Toaster richColors position="bottom-right" />
     </ThemeProvider>

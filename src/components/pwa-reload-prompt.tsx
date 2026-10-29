@@ -4,35 +4,40 @@ import { toast } from 'sonner';
 
 export function PWAReloadPrompt() {
   const {
-    offlineReady: [offlineReady],
     needRefresh: [needRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegistered(r) {
-      if (r) {
-        console.log('Service Worker đã kích hoạt thành công');
-      }
+    onRegistered(registration) {
+      if (!registration) return;
+
+      // 1. Kiểm tra bản build mới ngay khi tải trang
+      registration.update().catch(() => {});
+
+      // 2. Định kỳ kiểm tra cập nhật mỗi 60 giây
+      setInterval(() => {
+        registration.update().catch(() => {});
+      }, 60 * 1000);
+
+      // 3. Tự động kiểm tra khi người dùng mở lại tab / mở khóa màn hình điện thoại
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          registration.update().catch(() => {});
+        }
+      });
     },
     onRegisterError(error) {
-      console.error('Lỗi đăng ký Service Worker:', error);
+      console.error('Lỗi Service Worker:', error);
     },
   });
 
   useEffect(() => {
-    if (offlineReady) {
-      toast.success('PWA đã sẵn sàng hoạt động Ngoại tuyến (Offline)!');
-    }
-  }, [offlineReady]);
-
-  useEffect(() => {
     if (needRefresh) {
-      toast.info('Đã có bản cập nhật mới cho hệ thống!', {
-        description: 'Bấm Cập nhật để áp dụng phiên bản mới nhất.',
+      toast.info('Đã có bản cập nhật mới', {
         action: {
-          label: 'Cập nhật',
+          label: 'Tải lại',
           onClick: () => updateServiceWorker(true),
         },
-        duration: 10000,
+        duration: 15000,
       });
     }
   }, [needRefresh, updateServiceWorker]);
