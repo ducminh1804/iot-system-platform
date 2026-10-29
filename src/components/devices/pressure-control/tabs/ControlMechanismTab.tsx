@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   Clock,
   Gauge,
+  SlidersHorizontal,
   Timer,
   TrendingDown,
   TrendingUp,
@@ -31,16 +32,22 @@ import { PrvTimerCard } from './control-mechanism/PrvTimerCard';
 
 const CONTROL_MODES: ControlModeOption[] = [
   {
-    id: 'input_pressure_priority',
-    name: 'Ưu tiên áp suất đầu vào',
-    icon: Gauge,
-    color: 'text-blue-500',
+    id: 'manual',
+    name: 'Điều khiển thủ công (Manual)',
+    icon: SlidersHorizontal,
+    color: 'text-emerald-500',
   },
   {
     id: 'schedule_rtc',
     name: 'Hẹn giờ theo thời gian thực',
     icon: Clock,
     color: 'text-amber-500',
+  },
+  {
+    id: 'input_pressure_priority',
+    name: 'Ưu tiên áp suất đầu vào',
+    icon: Gauge,
+    color: 'text-blue-500',
   },
   {
     id: 'prv_timer',
@@ -94,12 +101,14 @@ function findOverlappingSlotIds(schedules: ScheduleSlot[]): Set<number> {
 interface ControlMechanismTabProps {
   config: PressureStationConfig;
   onChangeConfig: (updater: (prev: PressureStationConfig) => PressureStationConfig) => void;
+  onApplyMode?: (modeId: ControlModeId) => void;
   onSave?: () => void;
 }
 
 export function ControlMechanismTab({
   config,
   onChangeConfig,
+  onApplyMode,
 }: ControlMechanismTabProps) {
   const cm: ControlMechanismConfig =
     config.controlMechanism ?? DEFAULT_CONTROL_MECHANISM_CONFIG;
@@ -127,7 +136,11 @@ export function ControlMechanismTab({
 
   const handleActivateViewingMode = () => {
     if (viewingMode === activeMode) return;
-    updateControlMechanism((prev) => ({ ...prev, activeMode: viewingMode }));
+    if (onApplyMode) {
+      onApplyMode(viewingMode);
+    } else {
+      updateControlMechanism((prev) => ({ ...prev, activeMode: viewingMode }));
+    }
     const modeName = CONTROL_MODES.find((m) => m.id === viewingMode)?.name;
     toast.success(`Đã áp dụng chế độ: ${modeName}`);
   };
@@ -262,7 +275,16 @@ export function ControlMechanismTab({
               : undefined
           }
         >
-          {viewingMode === 'input_pressure_priority' ? (
+          {viewingMode === 'manual' ? (
+            <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#141824] p-8 shadow-xs flex flex-col items-center justify-center text-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <SlidersHorizontal className="w-6 h-6" />
+              </div>
+              <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">
+                Chế độ điều khiển thủ công trực tiếp trên màn hình chính
+              </span>
+            </div>
+          ) : viewingMode === 'input_pressure_priority' ? (
             <div className="grid grid-cols-1 gap-4">
               {/* CARD 1: MỨC ÁP SUẤT MIN */}
               <ThresholdCard

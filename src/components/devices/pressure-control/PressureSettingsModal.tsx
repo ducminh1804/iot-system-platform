@@ -12,8 +12,8 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { PressureStationConfig, StationMetaInfo } from './types';
-import { DEFAULT_PRESSURE_CONFIG } from './utils';
+import { PressureStationConfig, StationMetaInfo, ControlModeId } from './types';
+import { DEFAULT_PRESSURE_CONFIG, DEFAULT_CONTROL_MECHANISM_CONFIG } from './utils';
 import { ControlMechanismTab } from './tabs/ControlMechanismTab';
 import { AlarmsTab } from './tabs/AlarmsTab';
 import { PulseMeterTab } from './tabs/PulseMeterTab';
@@ -99,6 +99,19 @@ export function PressureSettingsModal({
   const isDirty = useMemo(() => {
     return JSON.stringify(draftConfig) !== JSON.stringify(config);
   }, [draftConfig, config]);
+
+  // Áp dụng chế độ điều khiển trực tiếp: lưu ngay lập tức xuống trạm mà không bắt người dùng bấm Lưu ở header
+  const handleApplyControlMode = (modeId: ControlModeId) => {
+    const nextConfig: PressureStationConfig = {
+      ...draftConfig,
+      controlMechanism: {
+        ...(draftConfig.controlMechanism ?? DEFAULT_CONTROL_MECHANISM_CONFIG),
+        activeMode: modeId,
+      },
+    };
+    setDraftConfig(nextConfig);
+    onChangeConfig(() => nextConfig);
+  };
 
   // Lưu toàn bộ thay đổi 1 lần duy nhất
   const handleCommitSave = () => {
@@ -394,6 +407,7 @@ export function PressureSettingsModal({
             <ControlMechanismTab
               config={draftConfig}
               onChangeConfig={setDraftConfig}
+              onApplyMode={handleApplyControlMode}
             />
           )}
 

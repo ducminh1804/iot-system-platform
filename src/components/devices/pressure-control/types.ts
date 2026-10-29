@@ -94,6 +94,7 @@ export interface AnomalyAlarmConfig {
 }
 
 export type ControlModeId =
+  | 'manual'
   | 'schedule_rtc'
   | 'input_pressure_priority'
   | 'prv_timer';

@@ -121,7 +121,7 @@ export const DEFAULT_PRV_TIMER_CONFIG: PrvTimerConfig = {
 };
 
 export const DEFAULT_CONTROL_MECHANISM_CONFIG: ControlMechanismConfig = {
-  activeMode: 'input_pressure_priority',
+  activeMode: 'schedule_rtc',
   prvTimer: DEFAULT_PRV_TIMER_CONFIG,
   schedules: [
     {

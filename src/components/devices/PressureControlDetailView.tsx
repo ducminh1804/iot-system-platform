@@ -10,6 +10,7 @@ import {
   PressureLevelControls,
   PressureTelemetryGrid,
   PressureSettingsModal,
+  ControlModeId,
 } from './pressure-control';
 
 import { DeviceStation } from './mockDeviceData';
@@ -108,6 +109,17 @@ export function PressureControlDetailView({ onBack, station }: PressureControlDe
 
   // Xử lý khi click vào 1 trong 3 đồng hồ: Dịch kim lên mức tương ứng, 2 đồng hồ còn lại quay về 0
   const handleSelectLevel = (level: 1 | 2 | 3) => {
+    const activeMode = config.controlMechanism?.activeMode ?? 'schedule_rtc';
+    if (activeMode === 'schedule_rtc' || activeMode === 'input_pressure_priority') {
+      const modeNames: Record<string, string> = {
+        schedule_rtc: 'Hẹn giờ RTC',
+        input_pressure_priority: 'Ưu tiên áp suất',
+      };
+      const modeName = modeNames[activeMode] || 'Tự động';
+      toast.warning(`Trạm đang chạy chế độ ${modeName}. Chỉ điều khiển được ở chế độ Thủ công.`);
+      return;
+    }
+
     const formatted = getFormattedNow();
     setActiveLevel(level);
     setPrevLevel(level);
