@@ -134,6 +134,15 @@
     @apply font-sans;
     overflow-x: clip;
   }
+
+  /* Ngăn chặn iOS Safari / Mobile Browser tự động phóng to (auto-zoom) khi focus vào ô nhập liệu */
+  @media screen and (max-width: 768px) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
 }
 
 /* Custom sleek minimalist scrollbar */

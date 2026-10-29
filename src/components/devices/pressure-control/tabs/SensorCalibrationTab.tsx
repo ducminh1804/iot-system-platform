@@ -1,6 +1,5 @@
 import React from 'react';
 import { Plus, Minus, Crosshair } from 'lucide-react';
-import { Slider as SliderPrimitive } from 'radix-ui';
 import { toast } from 'sonner';
 import { PressureStationConfig, SensorCalibrationConfig, CalibrationLevelConfig } from '../types';
 import { DEFAULT_SENSOR_CALIBRATION_CONFIG } from '../utils';
@@ -56,26 +55,11 @@ export function SensorCalibrationTab({
     });
   };
 
-  const clamp = (v: number) => Math.max(calib.rangeMin, Math.min(calib.rangeMax, v));
+  const clamp = (v: number) => Math.max(0, Math.min(100, v));
 
   const setLevelValue = (key: LevelKey, v: number) => {
     if (isNaN(v)) return;
     updateLevel(key, { value: round1(clamp(v)) });
-  };
-
-  const handleSliderChange = (vals: number[]) => {
-    onChangeConfig((prev) => {
-      const cur = prev.sensorCalibration ?? DEFAULT_SENSOR_CALIBRATION_CONFIG;
-      return {
-        ...prev,
-        sensorCalibration: {
-          ...cur,
-          level0: { ...cur.level0, value: vals[0] },
-          level1: { ...cur.level1, value: vals[1] },
-          level2: vals.length > 2 ? { ...cur.level2, value: vals[2] } : cur.level2,
-        },
-      };
-    });
   };
 
   const handleApplyLive = (key: LevelKey) => {
@@ -88,103 +72,30 @@ export function SensorCalibrationTab({
     setLevelValue(key, converted);
   };
 
-  const sliderValues = level2On
-    ? [calib.level0.value, calib.level1.value, calib.level2.value]
-    : [calib.level0.value, calib.level1.value];
-
-  const span = calib.rangeMax - calib.rangeMin;
-  const ticks = Array.from({ length: 6 }, (_, i) => calib.rangeMin + (span * i) / 5);
-
   const stepBtn =
     'w-11 h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#181D2A] text-slate-600 dark:text-slate-300 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 disabled:opacity-30 disabled:pointer-events-none cursor-pointer transition-all';
 
   return (
-    <div className="flex-1 flex flex-col gap-5 max-w-5xl mx-auto w-full py-1">
-      {/* Dải đo */}
-      <section className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#141824] p-4 sm:p-6 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-            Dải đo cảm biến
-          </h3>
-
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                inputMode="decimal"
-                value={calib.rangeMin}
-                onChange={(e) => updateCalib({ rangeMin: parseFloat(e.target.value) || 0 })}
-                aria-label="Min"
-                className="w-16 h-10 text-center font-mono font-bold text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0C0F17] text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-              />
-              <span className="text-slate-300 dark:text-slate-600">—</span>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={calib.rangeMax}
-                onChange={(e) => updateCalib({ rangeMax: parseFloat(e.target.value) || 0 })}
-                aria-label="Max"
-                className="w-16 h-10 text-center font-mono font-bold text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0C0F17] text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-              />
-            </div>
-
-            <div className="flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80">
-              {UNITS.map((u) => (
-                <button
-                  key={u}
-                  type="button"
-                  onClick={() => updateCalib({ unit: u })}
-                  className={`px-3 h-8 rounded-lg text-xs font-mono font-bold cursor-pointer transition-all ${
-                    calib.unit === u
-                      ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                  }`}
-                >
-                  {u}
-                </button>
-              ))}
-            </div>
-          </div>
+    <div className="flex-1 flex flex-col gap-4 max-w-5xl mx-auto w-full py-1">
+      {/* Bộ chọn đơn vị đo */}
+      <div className="flex items-center justify-end">
+        <div className="flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80">
+          {UNITS.map((u) => (
+            <button
+              key={u}
+              type="button"
+              onClick={() => updateCalib({ unit: u })}
+              className={`px-3 h-8 rounded-lg text-xs font-mono font-bold cursor-pointer transition-all ${
+                calib.unit === u
+                  ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              {u}
+            </button>
+          ))}
         </div>
-
-        {/* Track nhiều núm kéo */}
-        <div className="mt-12 mb-2 px-3">
-          <SliderPrimitive.Root
-            value={sliderValues}
-            min={calib.rangeMin}
-            max={calib.rangeMax}
-            step={0.1}
-            minStepsBetweenThumbs={0}
-            onValueChange={handleSliderChange}
-            className="relative flex w-full h-6 items-center touch-none select-none"
-          >
-            <SliderPrimitive.Track className="relative grow h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-              <SliderPrimitive.Range className="absolute h-full bg-blue-500/80" />
-            </SliderPrimitive.Track>
-
-            {sliderValues.map((v, i) => (
-              <SliderPrimitive.Thumb
-                key={i}
-                aria-label={LEVELS[i].label}
-                className="relative block w-7 h-7 rounded-full bg-white dark:bg-[#141824] border-2 border-blue-500 shadow-md outline-none cursor-grab active:cursor-grabbing focus-visible:ring-4 focus-visible:ring-blue-500/25 transition-shadow"
-              >
-                <span className="absolute inset-0 flex items-center justify-center text-[11px] font-mono font-extrabold text-blue-600 dark:text-blue-400">
-                  {i}
-                </span>
-                <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-[11px] font-mono font-bold whitespace-nowrap">
-                  {v.toFixed(1)}
-                </span>
-              </SliderPrimitive.Thumb>
-            ))}
-          </SliderPrimitive.Root>
-
-          <div className="mt-3 flex justify-between text-[11px] font-mono text-slate-400">
-            {ticks.map((t, i) => (
-              <span key={i}>{round1(t)}</span>
-            ))}
-          </div>
-        </div>
-      </section>
+      </div>
 
       {/* 3 mức áp */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">

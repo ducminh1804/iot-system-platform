@@ -98,6 +98,9 @@ export function PressureStepperInput({
             setDraft(String(value));
             e.currentTarget.select();
           }}
+          onClick={(e) => {
+            e.currentTarget.select();
+          }}
           onChange={(e) => {
             const next = e.target.value;
             if (/^[0-9]*[.,]?[0-9]*$/.test(next)) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Wifi, Settings, X, Clock } from 'lucide-react';
+import { ArrowLeft, Radio, Settings, X, Clock } from 'lucide-react';
 
 interface PressureControlHeaderProps {
   stationName?: string;
@@ -69,13 +69,13 @@ export function PressureControlHeader({
         </div>
       </div>
 
-      {/* Center: Realtime WiFi Broadcast Icon - Strictly Centered at 50% (No dot) */}
+      {/* Center: Realtime Telemetry Broadcast Icon - Strictly Centered at 50% */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
         <div
           className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full sm:rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 dark:border-emerald-500/50 shadow-sm shadow-emerald-500/15 transition-all pointer-events-auto"
-          title="Trực tuyến • Realtime Online"
+          title="Trực tuyến • Sóng kết nối thời gian thực"
         >
-          <Wifi className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400 animate-pulse stroke-[2.4]" />
+          <Radio className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400 animate-pulse stroke-[2.4]" />
         </div>
       </div>
 

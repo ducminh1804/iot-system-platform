@@ -93,7 +93,17 @@ export interface AnomalyAlarmConfig {
   lastResetTime?: string; // Thời điểm reset gần nhất
 }
 
-export type ControlModeId = 'schedule_rtc' | 'input_pressure_priority';
+export type ControlModeId =
+  | 'schedule_rtc'
+  | 'input_pressure_priority'
+  | 'prv_timer';
+
+export interface PrvTimerConfig {
+  enabled: boolean; // Cần gạt kích hoạt khung giờ
+  targetHour: number; // Giờ hẹn trong ngày (0 - 23)
+  targetMinute: number; // Phút hẹn trong ngày (0 - 59)
+  action?: 'shutoff' | 'level1' | 'level2' | 'level3'; // Mặc định đóng nguồn PRV
+}
 
 export interface ScheduleSlot {
   id: number;
@@ -123,6 +133,7 @@ export interface ControlMechanismConfig {
   schedules: ScheduleSlot[];
   lowerThreshold: ThresholdConfig;
   upperThreshold: ThresholdConfig;
+  prvTimer?: PrvTimerConfig;
 }
 
 export interface PressureStationConfig {

@@ -7,6 +7,7 @@ import {
   FlowAlarmConfig,
   AnomalyAlarmConfig,
   ControlMechanismConfig,
+  PrvTimerConfig,
 } from './types';
 
 /**
@@ -112,8 +113,16 @@ export const DEFAULT_ANOMALY_ALARM_CONFIG: AnomalyAlarmConfig = {
   lastResetTime: '21-10-2026 08:00',
 };
 
+export const DEFAULT_PRV_TIMER_CONFIG: PrvTimerConfig = {
+  enabled: false,
+  targetHour: 22,
+  targetMinute: 0,
+  action: 'shutoff',
+};
+
 export const DEFAULT_CONTROL_MECHANISM_CONFIG: ControlMechanismConfig = {
   activeMode: 'input_pressure_priority',
+  prvTimer: DEFAULT_PRV_TIMER_CONFIG,
   schedules: [
     {
       id: 1,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { PressureStationConfig, PulseMeterConfig } from '../types';
 import { DEFAULT_PULSE_METER_CONFIG } from '../utils';
 
@@ -61,6 +61,85 @@ const PULSE_FIELDS: PulseFieldItem[] = [
   },
 ];
 
+interface PulseFieldRowProps {
+  field: PulseFieldItem;
+  value: number;
+  onCommit: (val: number) => void;
+}
+
+function PulseFieldRow({ field, value, onCommit }: PulseFieldRowProps) {
+  const [draft, setDraft] = useState<string>(String(value ?? 0));
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    if (!isFocused) {
+      setDraft(String(value ?? 0));
+    }
+  }, [value, isFocused]);
+
+  const commitValue = (raw: string) => {
+    const normalized = raw.replace(',', '.').trim();
+    if (normalized === '' || isNaN(Number(normalized))) {
+      setDraft(String(value ?? 0));
+      return;
+    }
+    let parsed = parseFloat(normalized);
+    if (parsed < field.min) parsed = field.min;
+    const clean = field.step === '1' ? Math.round(parsed) : Number(parsed.toFixed(2));
+    setDraft(String(clean));
+    if (clean !== value) {
+      onCommit(clean);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between p-3.5 sm:px-5 sm:py-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors gap-3">
+      <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+        {field.label}
+      </span>
+
+      <div className="flex items-center h-9 sm:h-10 px-3 w-40 sm:w-52 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#10141D] focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 shadow-2xs transition-all shrink-0">
+        <input
+          type="text"
+          inputMode="decimal"
+          value={draft}
+          onFocus={(e) => {
+            setIsFocused(true);
+            setDraft(String(value ?? 0));
+            e.currentTarget.select();
+          }}
+          onClick={(e) => {
+            e.currentTarget.select();
+          }}
+          onChange={(e) => {
+            const next = e.target.value;
+            if (/^[0-9]*[.,]?[0-9]*$/.test(next)) {
+              setDraft(next);
+            }
+          }}
+          onBlur={() => {
+            setIsFocused(false);
+            commitValue(draft);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.currentTarget.blur();
+            } else if (e.key === 'Escape') {
+              setDraft(String(value ?? 0));
+              setIsFocused(false);
+              e.currentTarget.blur();
+            }
+          }}
+          className="w-full text-right font-mono font-bold text-xs sm:text-sm text-slate-900 dark:text-white bg-transparent outline-none pr-2"
+        />
+        <span className="text-xs font-mono font-semibold text-slate-400 select-none shrink-0">
+          {field.unit}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function PulseMeterTab({
   config,
   onChangeConfig,
@@ -88,41 +167,16 @@ export function PulseMeterTab({
     });
   };
 
-  const handleInputChange = (key: PulseNumericKey, valStr: string) => {
-    if (valStr === '') {
-      updateField(key, 0);
-      return;
-    }
-    const parsed = parseFloat(valStr);
-    updateField(key, parsed);
-  };
-
   return (
     <div className="flex-1 max-w-4xl mx-auto w-full py-2">
       <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#141824] shadow-xs divide-y divide-slate-100 dark:divide-slate-800/80 overflow-hidden">
         {PULSE_FIELDS.map((field) => (
-          <div
+          <PulseFieldRow
             key={field.key}
-            className="flex items-center justify-between p-3.5 sm:px-5 sm:py-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors gap-3"
-          >
-            <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
-              {field.label}
-            </span>
-
-            <div className="flex items-center h-9 sm:h-10 px-3 w-40 sm:w-52 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#10141D] focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 shadow-2xs transition-all shrink-0">
-              <input
-                type="number"
-                step={field.step}
-                min={field.min}
-                value={meter[field.key] ?? 0}
-                onChange={(e) => handleInputChange(field.key, e.target.value)}
-                className="w-full text-right font-mono font-bold text-xs sm:text-sm text-slate-900 dark:text-white bg-transparent outline-none pr-2"
-              />
-              <span className="text-xs font-mono font-semibold text-slate-400 select-none shrink-0">
-                {field.unit}
-              </span>
-            </div>
-          </div>
+            field={field}
+            value={meter[field.key] ?? 0}
+            onCommit={(val) => updateField(field.key, val)}
+          />
         ))}
       </div>
     </div>

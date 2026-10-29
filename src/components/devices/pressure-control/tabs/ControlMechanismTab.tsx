@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
   Clock,
   Gauge,
+  Timer,
   TrendingDown,
   TrendingUp,
 } from 'lucide-react';
@@ -12,8 +13,12 @@ import {
   ScheduleSlot,
   ThresholdConfig,
   ControlMechanismConfig,
+  PrvTimerConfig,
 } from '../types';
-import { DEFAULT_CONTROL_MECHANISM_CONFIG } from '../utils';
+import {
+  DEFAULT_CONTROL_MECHANISM_CONFIG,
+  DEFAULT_PRV_TIMER_CONFIG,
+} from '../utils';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import {
   ControlModeOption,
@@ -21,6 +26,7 @@ import {
 } from './control-mechanism/ControlModeSelector';
 import { ThresholdCard } from './control-mechanism/ThresholdCard';
 import { ScheduleRtcList } from './control-mechanism/ScheduleRtcList';
+import { PrvTimerCard } from './control-mechanism/PrvTimerCard';
 
 const CONTROL_MODES: ControlModeOption[] = [
   {
@@ -34,6 +40,12 @@ const CONTROL_MODES: ControlModeOption[] = [
     name: 'Hẹn giờ theo thời gian thực',
     icon: Clock,
     color: 'text-amber-500',
+  },
+  {
+    id: 'prv_timer',
+    name: 'Hẹn giờ điều khiển van PRV',
+    icon: Timer,
+    color: 'text-rose-500',
   },
 ];
 
@@ -94,6 +106,7 @@ export function ControlMechanismTab({
   const schedules = cm.schedules;
   const lowerThreshold = cm.lowerThreshold;
   const upperThreshold = cm.upperThreshold;
+  const prvTimer = cm.prvTimer ?? DEFAULT_PRV_TIMER_CONFIG;
 
   // Tách biệt giữa "Chế độ đang xem/cấu hình" (viewingMode) và "Chế độ đang kích hoạt vận hành" (activeMode)
   const [viewingMode, setViewingMode] = useState<ControlModeId>(activeMode);
@@ -150,6 +163,13 @@ export function ControlMechanismTab({
         upperThreshold: { ...nextUpper, value: clampedVal },
       };
     });
+  };
+
+  const setPrvTimer = (updater: (prev: PrvTimerConfig) => PrvTimerConfig) => {
+    updateControlMechanism((prev) => ({
+      ...prev,
+      prvTimer: updater(prev.prvTimer ?? DEFAULT_PRV_TIMER_CONFIG),
+    }));
   };
 
   const updateSchedule = (id: number, patch: Partial<ScheduleSlot>) => {
@@ -253,12 +273,18 @@ export function ControlMechanismTab({
               switchId="upper-cycle-switch"
             />
           </div>
-        ) : (
+        ) : viewingMode === 'schedule_rtc' ? (
           /* CHẾ ĐỘ 2: HẸN GIỜ THEO THỜI GIAN THỰC (5 GIAI ĐOẠN) */
           <ScheduleRtcList
             schedules={schedules}
             overlappingIds={overlappingIds}
             onUpdateSchedule={updateSchedule}
+          />
+        ) : (
+          /* CHẾ ĐỘ 3 / CƠ CHẾ SỐ 4: HẸN GIỜ ĐIỀU KHIỂN VAN PRV (ONE-SHOT) */
+          <PrvTimerCard
+            config={prvTimer}
+            onChangeConfig={setPrvTimer}
           />
         )}
       </div>
