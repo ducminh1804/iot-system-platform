@@ -341,43 +341,42 @@ export function PressureSettingsModal({
           )}
 
           {/* Cụm nút Hành động Chung: Bỏ thay đổi, Lưu 1 lần, Đóng Modal */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             {isDirty && (
-              <button
-                type="button"
-                onClick={handleDiscardChanges}
-                className="h-8 sm:h-9 px-2 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1 cursor-pointer active:scale-95 transition-all animate-in fade-in duration-150"
-                title="Hủy các thay đổi chưa lưu"
-              >
-                <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
-                <span className="hidden sm:inline">Bỏ thay đổi</span>
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={handleDiscardChanges}
+                  className="h-9 px-2.5 sm:px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all animate-in fade-in zoom-in-95 duration-150"
+                  title="Hủy các thay đổi chưa lưu"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="hidden sm:inline">Bỏ thay đổi</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCommitSave}
+                  className="h-9 px-3.5 sm:px-4 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all bg-blue-600 hover:bg-blue-700 text-white animate-in fade-in zoom-in-95 duration-150"
+                  title="Lưu toàn bộ cấu hình trạm"
+                >
+                  <Check className="w-4 h-4 stroke-[2.5]" />
+                  <span>Lưu</span>
+                </button>
+
+                {/* Vạch ngăn cách an toàn Poka-Yoke chống bấm nhầm */}
+                <div className="h-5 w-px bg-slate-200 dark:bg-slate-700 mx-0.5 sm:mx-1" />
+              </>
             )}
 
             <button
               type="button"
-              onClick={handleCommitSave}
-              className={`relative h-8 sm:h-9 px-2.5 sm:px-4 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all ${
-                isDirty
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white ring-2 ring-blue-500/30'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-              }`}
-              title="Lưu toàn bộ cấu hình trạm"
-            >
-              {isDirty && (
-                <span className="w-2 h-2 rounded-full bg-amber-300 animate-pulse" />
-              )}
-              <Check className="w-3.5 h-3.5" />
-              <span>Lưu</span>
-            </button>
-
-            <button
-              type="button"
               onClick={handleRequestClose}
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 flex items-center justify-center transition-colors cursor-pointer"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-100/90 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-2xs active:scale-95"
               title="Đóng (Thoát)"
+              aria-label="Đóng"
             >
-              <X className="w-4 h-4 sm:w-5 sm:h-5" />
+              <X className="w-5 h-5 stroke-[2]" />
             </button>
           </div>
         </div>
@@ -402,7 +401,6 @@ export function PressureSettingsModal({
             <PulseMeterTab
               config={draftConfig}
               onChangeConfig={setDraftConfig}
-              currentFlowRate={currentFlowRate}
             />
           )}
 

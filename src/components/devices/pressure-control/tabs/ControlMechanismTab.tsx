@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
+  AlertTriangle,
   Clock,
   Gauge,
   Timer,
@@ -238,55 +239,79 @@ export function ControlMechanismTab({
           onApplyMode={handleActivateViewingMode}
         />
 
-        {/* 2. Cấu hình chi tiết theo chế độ đang xem */}
-        {viewingMode === 'input_pressure_priority' ? (
-          <div className="grid grid-cols-1 gap-4">
-            {/* CARD 1: MỨC ÁP SUẤT MIN */}
-            <ThresholdCard
-              title="Mức áp suất Min"
-              icon={TrendingDown}
-              iconBgClass="bg-amber-500/10 dark:bg-amber-500/15"
-              iconColorClass="text-amber-500"
-              accentClass="text-amber-600 dark:text-amber-400"
-              config={lowerThreshold}
-              schedules={schedules}
-              minAllowed={0}
-              maxAllowed={lowerMaxAllowed}
-              step={0.5}
-              onChangeConfig={setLowerThreshold}
-              switchId="lower-cycle-switch"
-            />
-
-            {/* CARD 2: MỨC ÁP SUẤT MAX */}
-            <ThresholdCard
-              title="Mức áp suất Max"
-              icon={TrendingUp}
-              iconBgClass="bg-rose-500/10 dark:bg-rose-500/15"
-              iconColorClass="text-rose-500"
-              accentClass="text-rose-600 dark:text-rose-400"
-              config={upperThreshold}
-              schedules={schedules}
-              minAllowed={upperMinAllowed}
-              maxAllowed={80}
-              step={0.5}
-              onChangeConfig={setUpperThreshold}
-              switchId="upper-cycle-switch"
-            />
+        {/* Cảnh báo chế độ chưa được kích hoạt cho trạm (áp dụng thống nhất cho tất cả các chế độ) */}
+        {viewingMode !== activeMode && (
+          <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-amber-500/25 bg-amber-500/5 text-amber-800 dark:text-amber-300 text-xs sm:text-sm font-medium">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500" />
+            <span>Vui lòng kích hoạt chế độ để tiếp tục cấu hình</span>
           </div>
-        ) : viewingMode === 'schedule_rtc' ? (
-          /* CHẾ ĐỘ 2: HẸN GIỜ THEO THỜI GIAN THỰC (5 GIAI ĐOẠN) */
-          <ScheduleRtcList
-            schedules={schedules}
-            overlappingIds={overlappingIds}
-            onUpdateSchedule={updateSchedule}
-          />
-        ) : (
-          /* CHẾ ĐỘ 3 / CƠ CHẾ SỐ 4: HẸN GIỜ ĐIỀU KHIỂN VAN PRV (ONE-SHOT) */
-          <PrvTimerCard
-            config={prvTimer}
-            onChangeConfig={setPrvTimer}
-          />
         )}
+
+        {/* 2. Cấu hình chi tiết theo chế độ đang xem */}
+        <div
+          className={`transition-opacity ${
+            viewingMode !== activeMode ? 'opacity-60 select-none' : ''
+          }`}
+          onClickCapture={
+            viewingMode !== activeMode
+              ? (e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  toast.warning('Vui lòng kích hoạt chế độ để tiếp tục cấu hình');
+                }
+              : undefined
+          }
+        >
+          {viewingMode === 'input_pressure_priority' ? (
+            <div className="grid grid-cols-1 gap-4">
+              {/* CARD 1: MỨC ÁP SUẤT MIN */}
+              <ThresholdCard
+                title="Mức áp suất Min"
+                icon={TrendingDown}
+                iconBgClass="bg-amber-500/10 dark:bg-amber-500/15"
+                iconColorClass="text-amber-500"
+                accentClass="text-amber-600 dark:text-amber-400"
+                config={lowerThreshold}
+                schedules={schedules}
+                minAllowed={0}
+                maxAllowed={lowerMaxAllowed}
+                step={0.5}
+                onChangeConfig={setLowerThreshold}
+                switchId="lower-cycle-switch"
+              />
+
+              {/* CARD 2: MỨC ÁP SUẤT MAX */}
+              <ThresholdCard
+                title="Mức áp suất Max"
+                icon={TrendingUp}
+                iconBgClass="bg-rose-500/10 dark:bg-rose-500/15"
+                iconColorClass="text-rose-500"
+                accentClass="text-rose-600 dark:text-rose-400"
+                config={upperThreshold}
+                schedules={schedules}
+                minAllowed={upperMinAllowed}
+                maxAllowed={80}
+                step={0.5}
+                onChangeConfig={setUpperThreshold}
+                switchId="upper-cycle-switch"
+              />
+            </div>
+          ) : viewingMode === 'schedule_rtc' ? (
+            /* CHẾ ĐỘ 2: HẸN GIỜ THEO THỜI GIAN THỰC (5 GIAI ĐOẠN) */
+            <ScheduleRtcList
+              schedules={schedules}
+              overlappingIds={overlappingIds}
+              onUpdateSchedule={updateSchedule}
+            />
+          ) : (
+            /* CHẾ ĐỘ 3 / CƠ CHẾ SỐ 4: HẸN GIỜ ĐIỀU KHIỂN VAN PRV (ONE-SHOT) */
+            <PrvTimerCard
+              config={prvTimer}
+              onChangeConfig={setPrvTimer}
+              isModeActive={activeMode === 'prv_timer'}
+            />
+          )}
+        </div>
       </div>
     </TooltipProvider>
   );

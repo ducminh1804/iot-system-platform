@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
+import { Clock } from 'lucide-react';
 import { PressureStationConfig, PulseMeterConfig } from '../types';
 import { DEFAULT_PULSE_METER_CONFIG } from '../utils';
 
 interface PulseMeterTabProps {
   config: PressureStationConfig;
   onChangeConfig: (updater: (prev: PressureStationConfig) => PressureStationConfig) => void;
-  currentFlowRate?: number;
 }
 
 type PulseNumericKey =
   | 'pulsesPerUnit'
+  | 'netFlowTotal'
   | 'forwardFlow'
   | 'reserveFlow'
   | 'forwardPulses'
@@ -30,6 +31,13 @@ const PULSE_FIELDS: PulseFieldItem[] = [
     unit: 'p/m³',
     step: '1',
     min: 1,
+  },
+  {
+    key: 'netFlowTotal',
+    label: 'Net Flow Total',
+    unit: 'm³',
+    step: '0.1',
+    min: 0,
   },
   {
     key: 'forwardFlow',
@@ -94,9 +102,12 @@ function PulseFieldRow({ field, value, onCommit }: PulseFieldRowProps) {
 
   return (
     <div className="flex items-center justify-between p-3.5 sm:px-5 sm:py-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors gap-3">
-      <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
-        {field.label}
-      </span>
+      <div className="flex items-center gap-2.5 min-w-0">
+        <Clock className="w-4 h-4 text-blue-500 shrink-0" />
+        <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 truncate">
+          {field.label}
+        </span>
+      </div>
 
       <div className="flex items-center h-9 sm:h-10 px-3 w-40 sm:w-52 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#10141D] focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 shadow-2xs transition-all shrink-0">
         <input
@@ -155,10 +166,12 @@ export function PulseMeterTab({
         [key]: clean,
       };
 
-      // Tự động tính toán netFlowTotal = forwardFlow - reserveFlow
-      const fwd = key === 'forwardFlow' ? clean : (nextMeter.forwardFlow ?? 0);
-      const rev = key === 'reserveFlow' ? clean : (nextMeter.reserveFlow ?? 0);
-      nextMeter.netFlowTotal = Math.max(0, Number((fwd - rev).toFixed(2)));
+      // Tự động tính toán netFlowTotal nếu cập nhật forwardFlow hoặc reserveFlow
+      if (key === 'forwardFlow' || key === 'reserveFlow') {
+        const fwd = key === 'forwardFlow' ? clean : (nextMeter.forwardFlow ?? 0);
+        const rev = key === 'reserveFlow' ? clean : (nextMeter.reserveFlow ?? 0);
+        nextMeter.netFlowTotal = Math.max(0, Number((fwd - rev).toFixed(2)));
+      }
 
       return {
         ...prev,

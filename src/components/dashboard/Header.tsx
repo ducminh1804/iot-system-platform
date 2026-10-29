@@ -20,12 +20,21 @@ export function Header({
   onSearchChange,
   onOpenMobileMenu,
 }: HeaderProps) {
-  const { theme, setTheme, deviceBreadcrumbs } = useAppStore();
+  const theme = useAppStore((state) => state.theme);
+  const setTheme = useAppStore((state) => state.setTheme);
+  const deviceBreadcrumbs = useAppStore((state) => state.deviceBreadcrumbs);
   const [searchQuery, setSearchQuery] = useState('');
   const [hasUnread, setHasUnread] = useState(true);
 
   const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+      document.startViewTransition(() => {
+        setTheme(nextTheme);
+      });
+    } else {
+      setTheme(nextTheme);
+    }
   };
 
   const notifications = [
