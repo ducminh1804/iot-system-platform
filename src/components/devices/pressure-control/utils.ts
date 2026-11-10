@@ -8,6 +8,10 @@ import {
   AnomalyAlarmConfig,
   ControlMechanismConfig,
   PrvTimerConfig,
+  OutputPressureConfig,
+  ControlModeId,
+  ModbusMeterConfig,
+  ModbusBrandId,
 } from './types';
 
 /**
@@ -63,18 +67,18 @@ export const DEFAULT_PULSE_METER_CONFIG: PulseMeterConfig = {
 
 export const DEFAULT_SENSOR_CALIBRATION_CONFIG: SensorCalibrationConfig = {
   rangeMin: 0,
-  rangeMax: 10,
-  unit: 'bar',
+  rangeMax: 100,
+  unit: 'mH₂O',
   level0: {
     value: 0.0,
     enabled: true,
   },
   level1: {
-    value: 3.5,
+    value: 35.0,
     enabled: true,
   },
   level2: {
-    value: 7.0,
+    value: 70.0,
     enabled: false,
   },
 };
@@ -120,9 +124,17 @@ export const DEFAULT_PRV_TIMER_CONFIG: PrvTimerConfig = {
   action: 'shutoff',
 };
 
+export const DEFAULT_OUTPUT_PRESSURE_CONFIG: OutputPressureConfig = {
+  p1: 27.8,
+  p2: 50.0,
+  pFull: 100.0,
+};
+
 export const DEFAULT_CONTROL_MECHANISM_CONFIG: ControlMechanismConfig = {
   activeMode: 'schedule_rtc',
+  activeModes: ['schedule_rtc'],
   prvTimer: DEFAULT_PRV_TIMER_CONFIG,
+  outputPressure: DEFAULT_OUTPUT_PRESSURE_CONFIG,
   schedules: [
     {
       id: 1,
@@ -199,6 +211,148 @@ export const DEFAULT_CONTROL_MECHANISM_CONFIG: ControlMechanismConfig = {
   },
 };
 
+export interface ModbusBrandPreset {
+  id: ModbusBrandId;
+  name: string;
+  model: string;
+  config: Omit<ModbusMeterConfig, 'enabled'>;
+}
+
+export const MODBUS_BRAND_PRESETS: ModbusBrandPreset[] = [
+  {
+    id: 'abb',
+    name: 'ABB',
+    model: 'AquaMaster 4 / WaterMaster',
+    config: {
+      brand: 'abb',
+      model: 'AquaMaster 4',
+      slaveId: 1,
+      baudRate: 9600,
+      parity: 'even',
+      dataBits: 8,
+      stopBits: 1,
+      byteOrder: 'CDAB',
+      functionCode: 3,
+      pollIntervalSeconds: 15,
+      flowRate: { address: 40001, dataType: 'float32', multiplier: 1, unit: 'm³/h' },
+      forwardTotal: { address: 40003, dataType: 'float32', multiplier: 1, unit: 'm³' },
+      reverseTotal: { address: 40005, dataType: 'float32', multiplier: 1, unit: 'm³' },
+      pressure: { address: 40007, dataType: 'float32', multiplier: 1, unit: 'mH₂O', enabled: false },
+    },
+  },
+  {
+    id: 'siemens',
+    name: 'Siemens',
+    model: 'SITRANS F M MAG 8000',
+    config: {
+      brand: 'siemens',
+      model: 'MAG 8000',
+      slaveId: 1,
+      baudRate: 9600,
+      parity: 'none',
+      dataBits: 8,
+      stopBits: 1,
+      byteOrder: 'ABCD',
+      functionCode: 3,
+      pollIntervalSeconds: 15,
+      flowRate: { address: 30001, dataType: 'float32', multiplier: 1, unit: 'm³/h' },
+      forwardTotal: { address: 30003, dataType: 'float32', multiplier: 1, unit: 'm³' },
+      reverseTotal: { address: 30005, dataType: 'float32', multiplier: 1, unit: 'm³' },
+      pressure: { address: 30007, dataType: 'float32', multiplier: 1, unit: 'mH₂O', enabled: false },
+    },
+  },
+  {
+    id: 'krohne',
+    name: 'Krohne',
+    model: 'WATERFLUX 3070 / OPTIFLUX',
+    config: {
+      brand: 'krohne',
+      model: 'WATERFLUX 3070',
+      slaveId: 1,
+      baudRate: 19200,
+      parity: 'even',
+      dataBits: 8,
+      stopBits: 1,
+      byteOrder: 'CDAB',
+      functionCode: 3,
+      pollIntervalSeconds: 15,
+      flowRate: { address: 40001, dataType: 'float32', multiplier: 1, unit: 'm³/h' },
+      forwardTotal: { address: 40005, dataType: 'float32', multiplier: 1, unit: 'm³' },
+      reverseTotal: { address: 40009, dataType: 'float32', multiplier: 1, unit: 'm³' },
+      pressure: { address: 40013, dataType: 'float32', multiplier: 1, unit: 'mH₂O', enabled: false },
+    },
+  },
+  {
+    id: 'endress_hauser',
+    name: 'Endress+Hauser',
+    model: 'Proline Promag W 400 / 800',
+    config: {
+      brand: 'endress_hauser',
+      model: 'Promag W 400',
+      slaveId: 1,
+      baudRate: 9600,
+      parity: 'even',
+      dataBits: 8,
+      stopBits: 1,
+      byteOrder: 'ABCD',
+      functionCode: 3,
+      pollIntervalSeconds: 15,
+      flowRate: { address: 42007, dataType: 'float32', multiplier: 1, unit: 'm³/h' },
+      forwardTotal: { address: 42011, dataType: 'float32', multiplier: 1, unit: 'm³' },
+      reverseTotal: { address: 42015, dataType: 'float32', multiplier: 1, unit: 'm³' },
+      pressure: { address: 42019, dataType: 'float32', multiplier: 1, unit: 'mH₂O', enabled: false },
+    },
+  },
+  {
+    id: 'sensus',
+    name: 'Sensus',
+    model: 'MeiStream / PolluFlow',
+    config: {
+      brand: 'sensus',
+      model: 'MeiStream',
+      slaveId: 1,
+      baudRate: 9600,
+      parity: 'none',
+      dataBits: 8,
+      stopBits: 1,
+      byteOrder: 'CDAB',
+      functionCode: 3,
+      pollIntervalSeconds: 15,
+      flowRate: { address: 40001, dataType: 'float32', multiplier: 1, unit: 'm³/h' },
+      forwardTotal: { address: 40003, dataType: 'float32', multiplier: 1, unit: 'm³' },
+      reverseTotal: { address: 40005, dataType: 'float32', multiplier: 1, unit: 'm³' },
+      pressure: { address: 40007, dataType: 'float32', multiplier: 1, unit: 'mH₂O', enabled: false },
+    },
+  },
+  {
+    id: 'custom',
+    name: 'Thiết bị mới (Tùy chỉnh)',
+    model: 'Custom Modbus Device',
+    config: {
+      brand: 'custom',
+      customDeviceName: 'Đồng hồ điện từ mới',
+      model: 'Tùy chỉnh',
+      slaveId: 1,
+      baudRate: 9600,
+      parity: 'none',
+      dataBits: 8,
+      stopBits: 1,
+      byteOrder: 'CDAB',
+      functionCode: 3,
+      pollIntervalSeconds: 10,
+      flowRate: { address: 40001, dataType: 'float32', multiplier: 1, unit: 'm³/h' },
+      forwardTotal: { address: 40003, dataType: 'float32', multiplier: 1, unit: 'm³' },
+      reverseTotal: { address: 40005, dataType: 'float32', multiplier: 1, unit: 'm³' },
+      pressure: { address: 40007, dataType: 'float32', multiplier: 1, unit: 'mH₂O', enabled: false },
+    },
+  },
+];
+
+export const DEFAULT_MODBUS_METER_CONFIG: ModbusMeterConfig = {
+  enabled: true,
+  ...MODBUS_BRAND_PRESETS[0].config,
+};
+
 export const DEFAULT_PRESSURE_CONFIG: PressureStationConfig = {
   targetP1: 27.8,
   targetP2: 50.0,
@@ -222,4 +376,98 @@ export const DEFAULT_PRESSURE_CONFIG: PressureStationConfig = {
   sensorCalibration: DEFAULT_SENSOR_CALIBRATION_CONFIG,
   flowAlarm: DEFAULT_FLOW_ALARM_CONFIG,
   anomalyAlarm: DEFAULT_ANOMALY_ALARM_CONFIG,
+  modbusMeter: DEFAULT_MODBUS_METER_CONFIG,
 };
+
+/**
+ * Kiểm tra các chế độ đang chạy bị xung đột với chế độ người dùng muốn bật.
+ * NGUYÊN TẮC AN TOÀN: Hệ thống KHÔNG tự ý ngắt chế độ đang chạy mà trả về danh sách
+ * các chế độ đang xung đột để cảnh báo người dùng tự thao tác ngắt trước:
+ * - Thủ công (manual): Xung đột với mọi chế độ khác đang bật.
+ * - Thời gian thực (schedule_rtc): Xung đột với thủ công, prv, áp lực cuối nguồn (cho phép chạy cùng áp lực đầu vào).
+ * - Ưu tiên áp suất đầu vào (input_pressure_priority): Xung đột với thủ công, prv, áp lực cuối nguồn (cho phép chạy cùng thời gian thực).
+ * - Điều khiển theo áp lực cuối nguồn (output_pressure_control): Xung đột với mọi chế độ khác.
+ * - Điều khiển đóng mở van PRV (prv_timer): Xung đột với mọi chế độ khác.
+ */
+export function getConflictingModes(
+  targetMode: ControlModeId,
+  currentActiveModes: ControlModeId[] = []
+): ControlModeId[] {
+  switch (targetMode) {
+    case 'manual':
+      return currentActiveModes.filter((m) => m !== 'manual');
+
+    case 'schedule_rtc':
+      return currentActiveModes.filter(
+        (m) => m !== 'schedule_rtc' && m !== 'input_pressure_priority'
+      );
+
+    case 'input_pressure_priority':
+      return currentActiveModes.filter(
+        (m) => m !== 'input_pressure_priority' && m !== 'schedule_rtc'
+      );
+
+    case 'output_pressure_control':
+      return currentActiveModes.filter((m) => m !== 'output_pressure_control');
+
+    case 'prv_timer':
+      return currentActiveModes.filter((m) => m !== 'prv_timer');
+
+    default:
+      return [];
+  }
+}
+
+/**
+ * Xử lý ma trận kích hoạt chế độ điều khiển:
+ * - Thủ công (manual): Tắt toàn bộ các chế độ còn lại.
+ * - Thời gian thực (schedule_rtc): Tắt thủ công, tắt prv, tắt áp lực cuối nguồn; áp lực đầu vào vẫn cho phép chạy song song.
+ * - Ưu tiên áp suất đầu vào (input_pressure_priority): Tắt thủ công, tắt prv, tắt áp lực cuối nguồn; thời gian thực vẫn giữ nguyên nếu đang bật.
+ * - Điều khiển đóng mở van PRV (prv_timer): Tắt hết tất cả các chế độ khác.
+ * - Điều khiển theo áp lực cuối nguồn (output_pressure_control): Tắt hết tất cả các chế độ khác.
+ */
+export function resolveActivatedModes(
+  targetMode: ControlModeId,
+  currentActiveModes: ControlModeId[] = []
+): ControlModeId[] {
+  switch (targetMode) {
+    case 'manual':
+      return ['manual'];
+
+    case 'schedule_rtc':
+      if (currentActiveModes.includes('input_pressure_priority')) {
+        return ['schedule_rtc', 'input_pressure_priority'];
+      }
+      return ['schedule_rtc'];
+
+    case 'input_pressure_priority':
+      if (currentActiveModes.includes('schedule_rtc')) {
+        return ['schedule_rtc', 'input_pressure_priority'];
+      }
+      return ['input_pressure_priority'];
+
+    case 'prv_timer':
+      return ['prv_timer'];
+
+    case 'output_pressure_control':
+      return ['output_pressure_control'];
+
+    default:
+      return [targetMode];
+  }
+}
+
+/**
+ * Xử lý khi hủy kích hoạt một chế độ điều khiển:
+ * - Nếu không còn chế độ tự động nào đang bật, hệ thống tự động rơi về Thủ công ('manual').
+ */
+export function resolveDeactivatedModes(
+  targetMode: ControlModeId,
+  currentActiveModes: ControlModeId[] = []
+): ControlModeId[] {
+  const remaining = currentActiveModes.filter((m) => m !== targetMode);
+  if (remaining.length === 0) {
+    return ['manual'];
+  }
+  return remaining;
+}

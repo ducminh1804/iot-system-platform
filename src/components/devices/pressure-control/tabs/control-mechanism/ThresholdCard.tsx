@@ -24,6 +24,7 @@ interface ThresholdCardProps {
   step?: number;
   onChangeConfig: (updater: (prev: ThresholdConfig) => ThresholdConfig) => void;
   switchId: string;
+  variant?: 'card' | 'embedded';
 }
 
 export function ThresholdCard({
@@ -39,6 +40,7 @@ export function ThresholdCard({
   step = 0.5,
   onChangeConfig,
   switchId,
+  variant = 'card',
 }: ThresholdCardProps) {
   const handleScopeChange = (scope: 'all_time' | 'custom_window') => {
     onChangeConfig((prev) => ({
@@ -85,7 +87,13 @@ export function ThresholdCard({
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#141824] p-3.5 sm:p-5 shadow-xs space-y-3.5">
+    <div
+      className={
+        variant === 'embedded'
+          ? 'rounded-xl border border-slate-200/70 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#0c0f17]/50 p-3.5 sm:p-4 space-y-3'
+          : 'rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#141824] p-3.5 sm:p-5 shadow-xs space-y-3.5'
+      }
+    >
       {/* 1. Header Card: Tên ngưỡng + Stepper áp suất */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
         <div className="flex items-center gap-2.5">

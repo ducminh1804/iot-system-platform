@@ -1,12 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
-  AlertTriangle,
   Clock,
   Gauge,
   SlidersHorizontal,
   Timer,
   TrendingDown,
   TrendingUp,
+  Waves,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -16,42 +16,63 @@ import {
   ThresholdConfig,
   ControlMechanismConfig,
   PrvTimerConfig,
+  OutputPressureConfig,
 } from '../types';
 import {
   DEFAULT_CONTROL_MECHANISM_CONFIG,
   DEFAULT_PRV_TIMER_CONFIG,
+  getConflictingModes,
+  resolveActivatedModes,
+  resolveDeactivatedModes,
 } from '../utils';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import {
-  ControlModeOption,
-  ControlModeSelector,
-} from './control-mechanism/ControlModeSelector';
+import { Switch } from '@/components/ui/switch';
 import { ThresholdCard } from './control-mechanism/ThresholdCard';
 import { ScheduleRtcList } from './control-mechanism/ScheduleRtcList';
 import { PrvTimerCard } from './control-mechanism/PrvTimerCard';
+import { DownstreamPressureCard } from './control-mechanism/DownstreamPressureCard';
 
-const CONTROL_MODES: ControlModeOption[] = [
+interface ControlModeMeta {
+  id: ControlModeId;
+  name: string;
+  shortName: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+}
+
+const CONTROL_MODES: ControlModeMeta[] = [
   {
     id: 'manual',
     name: 'Điều khiển thủ công (Manual)',
+    shortName: 'Thủ công',
     icon: SlidersHorizontal,
     color: 'text-emerald-500',
   },
   {
     id: 'schedule_rtc',
     name: 'Hẹn giờ theo thời gian thực',
+    shortName: 'Thời gian thực',
     icon: Clock,
     color: 'text-amber-500',
   },
   {
     id: 'input_pressure_priority',
     name: 'Ưu tiên áp suất đầu vào',
+    shortName: 'Áp lực đầu vào',
     icon: Gauge,
     color: 'text-blue-500',
   },
   {
+    id: 'output_pressure_control',
+    name: 'Điều khiển theo áp lực cuối nguồn',
+    shortName: 'Áp lực cuối nguồn',
+    icon: Waves,
+    color: 'text-cyan-500',
+  },
+  {
     id: 'prv_timer',
-    name: 'Hẹn giờ điều khiển van PRV',
+    name: 'Điều khiển đóng mở van PRV',
+    shortName: 'Đóng mở van PRV',
     icon: Timer,
     color: 'text-rose-500',
   },
@@ -102,6 +123,7 @@ interface ControlMechanismTabProps {
   config: PressureStationConfig;
   onChangeConfig: (updater: (prev: PressureStationConfig) => PressureStationConfig) => void;
   onApplyMode?: (modeId: ControlModeId) => void;
+  onDeactivateMode?: (modeId: ControlModeId) => void;
   onSave?: () => void;
 }
 
@@ -109,17 +131,31 @@ export function ControlMechanismTab({
   config,
   onChangeConfig,
   onApplyMode,
+  onDeactivateMode,
 }: ControlMechanismTabProps) {
   const cm: ControlMechanismConfig =
     config.controlMechanism ?? DEFAULT_CONTROL_MECHANISM_CONFIG;
   const activeMode = cm.activeMode;
+  const activeModes =
+    cm.activeModes && cm.activeModes.length > 0
+      ? cm.activeModes
+      : [activeMode];
   const schedules = cm.schedules;
   const lowerThreshold = cm.lowerThreshold;
   const upperThreshold = cm.upperThreshold;
   const prvTimer = cm.prvTimer ?? DEFAULT_PRV_TIMER_CONFIG;
+  const outputPressure: OutputPressureConfig =
+    cm.outputPressure ?? {
+      p1: config.targetP1,
+      p2: config.targetP2,
+      pFull: config.targetP3,
+    };
 
-  // Tách biệt giữa "Chế độ đang xem/cấu hình" (viewingMode) và "Chế độ đang kích hoạt vận hành" (activeMode)
-  const [viewingMode, setViewingMode] = useState<ControlModeId>(activeMode);
+  const isManualActive = activeModes.includes('manual');
+  const isRtcActive = activeModes.includes('schedule_rtc');
+  const isInputPressureActive = activeModes.includes('input_pressure_priority');
+  const isOutputPressureActive = activeModes.includes('output_pressure_control');
+  const isPrvActive = activeModes.includes('prv_timer');
 
   const updateControlMechanism = (
     updater: (prev: ControlMechanismConfig) => ControlMechanismConfig
@@ -134,15 +170,77 @@ export function ControlMechanismTab({
     });
   };
 
-  const handleActivateViewingMode = () => {
-    if (viewingMode === activeMode) return;
-    if (onApplyMode) {
-      onApplyMode(viewingMode);
+  const handleToggleMode = (modeId: ControlModeId, checked: boolean) => {
+    const targetMeta = CONTROL_MODES.find((m) => m.id === modeId);
+    const targetName = targetMeta?.name ?? modeId;
+
+    if (checked) {
+      // 1. Kiểm tra các chế độ đang xung đột - KHÔNG tự ý ngắt của người dùng
+      const conflictingModes = getConflictingModes(modeId, activeModes);
+
+      if (conflictingModes.length > 0) {
+        const conflictingNames = conflictingModes
+          .map((m) => CONTROL_MODES.find((opt) => opt.id === m)?.name ?? m)
+          .join(', ');
+        toast.warning(`Phải tắt [${conflictingNames}] để bật [${targetName}]`);
+        return; // Dừng lại, giữ nguyên công tắc để người dùng tự thao tác tắt
+      }
+
+      // 2. Không có xung đột: Kích hoạt chế độ
+      if (onApplyMode) {
+        onApplyMode(modeId);
+      } else {
+        const nextActiveModes = activeModes.includes(modeId)
+          ? activeModes
+          : [...activeModes, modeId];
+        updateControlMechanism((prev) => ({
+          ...prev,
+          activeMode: modeId,
+          activeModes: nextActiveModes,
+          prvTimer: {
+            ...(prev.prvTimer ?? DEFAULT_PRV_TIMER_CONFIG),
+            enabled: nextActiveModes.includes('prv_timer'),
+          },
+        }));
+      }
+
+      // Thông báo thành công
+      if (
+        modeId === 'input_pressure_priority' &&
+        activeModes.includes('schedule_rtc')
+      ) {
+        toast.success(
+          `Đã bật [${targetName}] (chạy song song với Hẹn giờ theo thời gian thực)`
+        );
+      } else if (
+        modeId === 'schedule_rtc' &&
+        activeModes.includes('input_pressure_priority')
+      ) {
+        toast.success(
+          `Đã bật [${targetName}] (chạy song song với Ưu tiên áp suất đầu vào)`
+        );
+      } else {
+        toast.success(`Đã bật [${targetName}]`);
+      }
     } else {
-      updateControlMechanism((prev) => ({ ...prev, activeMode: viewingMode }));
+      // 3. Tắt chế độ: Cho phép người dùng tự tắt chế độ đang chạy
+      if (onDeactivateMode) {
+        onDeactivateMode(modeId);
+      } else {
+        const nextActiveModes = activeModes.filter((m) => m !== modeId);
+        updateControlMechanism((prev) => ({
+          ...prev,
+          activeMode: nextActiveModes[0] ?? 'manual',
+          activeModes: nextActiveModes,
+          prvTimer: {
+            ...(prev.prvTimer ?? DEFAULT_PRV_TIMER_CONFIG),
+            enabled: nextActiveModes.includes('prv_timer'),
+          },
+        }));
+      }
+
+      toast.info(`Đã tắt [${targetName}]`);
     }
-    const modeName = CONTROL_MODES.find((m) => m.id === viewingMode)?.name;
-    toast.success(`Đã áp dụng chế độ: ${modeName}`);
   };
 
   const setLowerThreshold = (
@@ -184,6 +282,31 @@ export function ControlMechanismTab({
       ...prev,
       prvTimer: updater(prev.prvTimer ?? DEFAULT_PRV_TIMER_CONFIG),
     }));
+  };
+
+  const setOutputPressure = (
+    updater: (prev: OutputPressureConfig) => OutputPressureConfig
+  ) => {
+    onChangeConfig((prevConfig) => {
+      const currentCm =
+        prevConfig.controlMechanism ?? DEFAULT_CONTROL_MECHANISM_CONFIG;
+      const currentOp = currentCm.outputPressure ?? {
+        p1: prevConfig.targetP1,
+        p2: prevConfig.targetP2,
+        pFull: prevConfig.targetP3,
+      };
+      const nextOp = updater(currentOp);
+      return {
+        ...prevConfig,
+        targetP1: nextOp.p1,
+        targetP2: nextOp.p2,
+        targetP3: nextOp.pFull,
+        controlMechanism: {
+          ...currentCm,
+          outputPressure: nextOp,
+        },
+      };
+    });
   };
 
   const updateSchedule = (id: number, patch: Partial<ScheduleSlot>) => {
@@ -233,59 +356,140 @@ export function ControlMechanismTab({
   );
 
   const overlappingIds = useMemo(
-    () =>
-      viewingMode === 'schedule_rtc'
-        ? findOverlappingSlotIds(schedules)
-        : new Set<number>(),
-    [viewingMode, schedules]
+    () => findOverlappingSlotIds(schedules),
+    [schedules]
   );
 
   return (
     <TooltipProvider>
       <div className="flex-1 flex flex-col gap-4 max-w-5xl mx-auto w-full py-1">
-        {/* 1. Header chọn chế độ cấu hình & kích hoạt vận hành */}
-        <ControlModeSelector
-          modes={CONTROL_MODES}
-          viewingMode={viewingMode}
-          activeMode={activeMode}
-          onSelectViewingMode={setViewingMode}
-          onApplyMode={handleActivateViewingMode}
-        />
-
-        {/* Cảnh báo chế độ chưa được kích hoạt cho trạm (áp dụng thống nhất cho tất cả các chế độ) */}
-        {viewingMode !== activeMode && (
-          <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-amber-500/25 bg-amber-500/5 text-amber-800 dark:text-amber-300 text-xs sm:text-sm font-medium">
-            <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500" />
-            <span>Vui lòng kích hoạt chế độ để tiếp tục cấu hình</span>
-          </div>
-        )}
-
-        {/* 2. Cấu hình chi tiết theo chế độ đang xem */}
-        <div
-          className={`transition-opacity ${
-            viewingMode !== activeMode ? 'opacity-60 select-none' : ''
-          }`}
-          onClickCapture={
-            viewingMode !== activeMode
-              ? (e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  toast.warning('Vui lòng kích hoạt chế độ để tiếp tục cấu hình');
-                }
-              : undefined
-          }
-        >
-          {viewingMode === 'manual' ? (
-            <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#141824] p-8 shadow-xs flex flex-col items-center justify-center text-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                <SlidersHorizontal className="w-6 h-6" />
+        {/* Danh sách các khối cơ chế điều khiển */}
+        <div className="flex flex-col gap-4">
+          {/* KHỐI 1: ĐIỀU KHIỂN THỦ CÔNG (Gọn gàng, loại bỏ text thừa) */}
+          <section
+            id="section-manual"
+            className={`rounded-2xl border transition-all ${
+              isManualActive
+                ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-[#141824] shadow-xs'
+                : 'border-slate-200/70 dark:border-slate-800/80 bg-slate-50/40 dark:bg-[#10141f]/40 opacity-75'
+            } px-4 py-3 sm:px-5 sm:py-3.5 flex items-center justify-between gap-3`}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                  isManualActive
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                    : 'bg-slate-200/60 dark:bg-slate-800 text-slate-500 border-slate-300 dark:border-slate-700'
+                }`}
+              >
+                <SlidersHorizontal className="w-4 h-4" />
               </div>
-              <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">
-                Chế độ điều khiển thủ công trực tiếp trên màn hình chính
-              </span>
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                Điều khiển thủ công (Manual)
+              </h3>
             </div>
-          ) : viewingMode === 'input_pressure_priority' ? (
-            <div className="grid grid-cols-1 gap-4">
+
+            <div className="flex items-center">
+              <Switch
+                id="switch-mode-manual"
+                checked={isManualActive}
+                onCheckedChange={(checked) => handleToggleMode('manual', checked)}
+                aria-label="Bật/tắt Điều khiển thủ công"
+              />
+            </div>
+          </section>
+
+          {/* KHỐI 2: HẸN GIỜ THEO THỜI GIAN THỰC (Tách riêng) */}
+          <section
+            id="section-schedule_rtc"
+            className={`rounded-2xl border transition-all ${
+              isRtcActive
+                ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-[#141824] shadow-xs'
+                : 'border-slate-200/70 dark:border-slate-800/80 bg-slate-50/40 dark:bg-[#10141f]/40 opacity-75'
+            } p-4 sm:p-5 space-y-3.5`}
+          >
+            <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                    isRtcActive
+                      ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                      : 'bg-slate-200/60 dark:bg-slate-800 text-slate-500 border-slate-300 dark:border-slate-700'
+                  }`}
+                >
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                    Hẹn giờ theo thời gian thực
+                  </h3>
+                </div>
+              </div>
+
+              <div className="flex items-center">
+                <Switch
+                  id="switch-mode-schedule_rtc"
+                  checked={isRtcActive}
+                  onCheckedChange={(checked) => handleToggleMode('schedule_rtc', checked)}
+                  aria-label="Bật/tắt Hẹn giờ theo thời gian thực"
+                />
+              </div>
+            </div>
+
+            <div className={`transition-opacity ${!isRtcActive ? 'opacity-50 pointer-events-none' : ''}`}>
+              <ScheduleRtcList
+                schedules={schedules}
+                overlappingIds={overlappingIds}
+                onUpdateSchedule={updateSchedule}
+                borderless={true}
+              />
+            </div>
+          </section>
+
+          {/* KHỐI 3: ƯU TIÊN ÁP SUẤT ĐẦU VÀO (Tách riêng) */}
+          <section
+            id="section-input_pressure_priority"
+            className={`rounded-2xl border transition-all ${
+              isInputPressureActive
+                ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-[#141824] shadow-xs'
+                : 'border-slate-200/70 dark:border-slate-800/80 bg-slate-50/40 dark:bg-[#10141f]/40 opacity-75'
+            } p-4 sm:p-5 space-y-3.5`}
+          >
+            <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                    isInputPressureActive
+                      ? 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                      : 'bg-slate-200/60 dark:bg-slate-800 text-slate-500 border-slate-300 dark:border-slate-700'
+                  }`}
+                >
+                  <Gauge className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                    Ưu tiên áp suất đầu vào
+                  </h3>
+                </div>
+              </div>
+
+              <div className="flex items-center">
+                <Switch
+                  id="switch-mode-input_pressure_priority"
+                  checked={isInputPressureActive}
+                  onCheckedChange={(checked) =>
+                    handleToggleMode('input_pressure_priority', checked)
+                  }
+                  aria-label="Bật/tắt Ưu tiên áp suất đầu vào"
+                />
+              </div>
+            </div>
+
+            <div
+              className={`grid grid-cols-1 md:grid-cols-2 gap-3.5 transition-opacity ${
+                !isInputPressureActive ? 'opacity-50 pointer-events-none' : ''
+              }`}
+            >
               {/* CARD 1: MỨC ÁP SUẤT MIN */}
               <ThresholdCard
                 title="Mức áp suất Min"
@@ -300,6 +504,7 @@ export function ControlMechanismTab({
                 step={0.5}
                 onChangeConfig={setLowerThreshold}
                 switchId="lower-cycle-switch"
+                variant="embedded"
               />
 
               {/* CARD 2: MỨC ÁP SUẤT MAX */}
@@ -316,25 +521,74 @@ export function ControlMechanismTab({
                 step={0.5}
                 onChangeConfig={setUpperThreshold}
                 switchId="upper-cycle-switch"
+                variant="embedded"
               />
             </div>
-          ) : viewingMode === 'schedule_rtc' ? (
-            /* CHẾ ĐỘ 2: HẸN GIỜ THEO THỜI GIAN THỰC (5 GIAI ĐOẠN) */
-            <ScheduleRtcList
-              schedules={schedules}
-              overlappingIds={overlappingIds}
-              onUpdateSchedule={updateSchedule}
-            />
-          ) : (
-            /* CHẾ ĐỘ 3 / CƠ CHẾ SỐ 4: HẸN GIỜ ĐIỀU KHIỂN VAN PRV (ONE-SHOT) */
+          </section>
+
+          {/* KHỐI 4: ĐIỀU KHIỂN THEO ÁP LỰC CUỐI NGUỒN */}
+          <section
+            id="section-output_pressure_control"
+            className={`rounded-2xl border transition-all ${
+              isOutputPressureActive
+                ? 'border-slate-300 dark:border-slate-700 bg-white dark:bg-[#141824] shadow-xs'
+                : 'border-slate-200/70 dark:border-slate-800/80 bg-slate-50/40 dark:bg-[#10141f]/40 opacity-75'
+            } p-4 sm:p-5 space-y-3.5`}
+          >
+            <div className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                    isOutputPressureActive
+                      ? 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20'
+                      : 'bg-slate-200/60 dark:bg-slate-800 text-slate-500 border-slate-300 dark:border-slate-700'
+                  }`}
+                >
+                  <Waves className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                  Điều khiển theo áp lực cuối nguồn
+                </h3>
+              </div>
+
+              <div className="flex items-center">
+                <Switch
+                  id="switch-mode-output_pressure_control"
+                  checked={isOutputPressureActive}
+                  onCheckedChange={(checked) =>
+                    handleToggleMode('output_pressure_control', checked)
+                  }
+                  aria-label="Bật/tắt Điều khiển theo áp lực cuối nguồn"
+                />
+              </div>
+            </div>
+
+            <div
+              className={`transition-opacity ${
+                !isOutputPressureActive ? 'opacity-50 pointer-events-none' : ''
+              }`}
+            >
+              <DownstreamPressureCard
+                config={outputPressure}
+                onChangeConfig={setOutputPressure}
+                disabled={!isOutputPressureActive}
+                variant="embedded"
+              />
+            </div>
+          </section>
+
+          {/* KHỐI 4: ĐIỀU KHIỂN ĐÓNG MỞ VAN PRV */}
+          <section id="section-prv_timer">
             <PrvTimerCard
               config={prvTimer}
               onChangeConfig={setPrvTimer}
-              isModeActive={activeMode === 'prv_timer'}
+              isModeActive={isPrvActive}
+              onToggleMode={(checked) => handleToggleMode('prv_timer', checked)}
             />
-          )}
+          </section>
         </div>
       </div>
     </TooltipProvider>
   );
 }
+

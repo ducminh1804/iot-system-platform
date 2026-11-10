@@ -68,7 +68,7 @@ export function DeviceHubView() {
   }, [searchTerm, selectedArea, selectedVersion]);
 
   const handleCardClick = (category: DeviceCategory) => {
-    if (category.id !== 'pressureControl') {
+    if (category.id !== 'pressureControl' && category.id !== 'valveBreaker') {
       return;
     }
     // Navigate to Level 2 (Device List View)
@@ -88,6 +88,11 @@ export function DeviceHubView() {
     return (
       <PressureControlDetailView
         station={selectedStation}
+        deviceType={
+          selectedStation.category === 'valveBreaker' || selectedCategory?.id === 'valveBreaker'
+            ? 'valveBreaker'
+            : 'pressureControl'
+        }
         onBack={() => setSelectedStation(null)}
       />
     );
@@ -248,7 +253,7 @@ export function DeviceHubView() {
       {filteredDevices.length > 0 ? (
         <div className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden lg:max-h-[540px] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:grid-rows-2 gap-2.5 sm:gap-4 pb-6 lg:pb-0 pr-0.5">
           {filteredDevices.map((card) => {
-            const isClickable = card.id === 'pressureControl';
+            const isClickable = card.id === 'pressureControl' || card.id === 'valveBreaker';
             return (
               <div
                 key={card.id}

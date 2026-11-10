@@ -10,13 +10,21 @@ import {
   Zap,
   RotateCcw,
   AlertTriangle,
+  Cpu,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PressureStationConfig, StationMetaInfo, ControlModeId } from './types';
-import { DEFAULT_PRESSURE_CONFIG, DEFAULT_CONTROL_MECHANISM_CONFIG } from './utils';
+import {
+  DEFAULT_PRESSURE_CONFIG,
+  DEFAULT_CONTROL_MECHANISM_CONFIG,
+  DEFAULT_PRV_TIMER_CONFIG,
+  resolveActivatedModes,
+  resolveDeactivatedModes,
+} from './utils';
 import { ControlMechanismTab } from './tabs/ControlMechanismTab';
 import { AlarmsTab } from './tabs/AlarmsTab';
 import { PulseMeterTab } from './tabs/PulseMeterTab';
+import { ModbusTab } from './tabs/ModbusTab';
 import { SensorCalibrationTab } from './tabs/SensorCalibrationTab';
 import { AnomalyAlarmTab } from './tabs/AnomalyAlarmTab';
 import { WaveTabs, WaveTabItem } from './WaveTabs';
@@ -24,6 +32,7 @@ import { WaveTabs, WaveTabItem } from './WaveTabs';
 export type SettingsTabId =
   | 'control'
   | 'pulse_meter'
+  | 'modbus'
   | 'flow_alarms'
   | 'alarms'
   | 'calibration';
@@ -31,7 +40,8 @@ export type SettingsTabId =
 const SETTINGS_TABS: WaveTabItem<SettingsTabId>[] = [
   { id: 'control', label: 'Cơ chế điều khiển', shortLabel: 'Điều khiển', icon: SlidersHorizontal, accentColor: 'text-orange-500' },
   { id: 'pulse_meter', label: 'Đồng hồ xung', shortLabel: 'Đồng hồ', icon: Droplets, accentColor: 'text-blue-500' },
-  { id: 'flow_alarms', label: 'Cảnh báo dị thường', shortLabel: 'Dị thường', icon: Waves, accentColor: 'text-cyan-500' },
+  { id: 'modbus', label: 'Thiết lập Modbus', shortLabel: 'Modbus', icon: Cpu, accentColor: 'text-emerald-500' },
+  { id: 'flow_alarms', label: 'Cảnh báo bất thường', shortLabel: 'Bất thường', icon: Waves, accentColor: 'text-cyan-500' },
   { id: 'alarms', label: 'Nguồn & Pin', shortLabel: 'Nguồn & Pin', icon: Zap, accentColor: 'text-amber-500' },
   { id: 'calibration', label: 'Hiệu chuẩn cảm biến', shortLabel: 'Hiệu chuẩn', icon: Gauge, accentColor: 'text-indigo-500' },
 ];
@@ -102,11 +112,49 @@ export function PressureSettingsModal({
 
   // Áp dụng chế độ điều khiển trực tiếp: lưu ngay lập tức xuống trạm mà không bắt người dùng bấm Lưu ở header
   const handleApplyControlMode = (modeId: ControlModeId) => {
+    const currentCm = draftConfig.controlMechanism ?? DEFAULT_CONTROL_MECHANISM_CONFIG;
+    const currentActiveModes =
+      currentCm.activeModes && currentCm.activeModes.length > 0
+        ? currentCm.activeModes
+        : [currentCm.activeMode];
+    const nextActiveModes = currentActiveModes.includes(modeId)
+      ? currentActiveModes
+      : [...currentActiveModes, modeId];
+
     const nextConfig: PressureStationConfig = {
       ...draftConfig,
       controlMechanism: {
-        ...(draftConfig.controlMechanism ?? DEFAULT_CONTROL_MECHANISM_CONFIG),
+        ...currentCm,
         activeMode: modeId,
+        activeModes: nextActiveModes,
+        prvTimer: {
+          ...(currentCm.prvTimer ?? DEFAULT_PRV_TIMER_CONFIG),
+          enabled: nextActiveModes.includes('prv_timer'),
+        },
+      },
+    };
+    setDraftConfig(nextConfig);
+    onChangeConfig(() => nextConfig);
+  };
+
+  const handleDeactivateControlMode = (modeId: ControlModeId) => {
+    const currentCm = draftConfig.controlMechanism ?? DEFAULT_CONTROL_MECHANISM_CONFIG;
+    const currentActiveModes =
+      currentCm.activeModes && currentCm.activeModes.length > 0
+        ? currentCm.activeModes
+        : [currentCm.activeMode];
+    const nextActiveModes = currentActiveModes.filter((m) => m !== modeId);
+
+    const nextConfig: PressureStationConfig = {
+      ...draftConfig,
+      controlMechanism: {
+        ...currentCm,
+        activeMode: nextActiveModes[0] ?? 'manual',
+        activeModes: nextActiveModes,
+        prvTimer: {
+          ...(currentCm.prvTimer ?? DEFAULT_PRV_TIMER_CONFIG),
+          enabled: nextActiveModes.includes('prv_timer'),
+        },
       },
     };
     setDraftConfig(nextConfig);
@@ -115,6 +163,11 @@ export function PressureSettingsModal({
 
   // Lưu toàn bộ thay đổi 1 lần duy nhất
   const handleCommitSave = () => {
+    const cm = draftConfig.controlMechanism;
+    if (cm?.activeModes && cm.activeModes.length === 0) {
+      toast.warning('Vui lòng bật ít nhất 1 chế độ điều khiển trước khi lưu');
+      return;
+    }
     onChangeConfig(() => draftConfig);
     if (onSave) {
       onSave();
@@ -408,6 +461,7 @@ export function PressureSettingsModal({
               config={draftConfig}
               onChangeConfig={setDraftConfig}
               onApplyMode={handleApplyControlMode}
+              onDeactivateMode={handleDeactivateControlMode}
             />
           )}
 
@@ -415,6 +469,14 @@ export function PressureSettingsModal({
             <PulseMeterTab
               config={draftConfig}
               onChangeConfig={setDraftConfig}
+            />
+          )}
+
+          {activeTab === 'modbus' && (
+            <ModbusTab
+              config={draftConfig}
+              onChangeConfig={setDraftConfig}
+              onSave={onSave}
             />
           )}
 

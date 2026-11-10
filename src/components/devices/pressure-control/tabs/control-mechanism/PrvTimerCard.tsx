@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, ChevronDown, Clock } from 'lucide-react';
+import { AlertTriangle, ChevronDown, Clock, Timer } from 'lucide-react';
 import { toast } from 'sonner';
 import { PrvTimerConfig } from '../../types';
 import { DEFAULT_PRV_TIMER_CONFIG } from '../../utils';
@@ -9,6 +9,7 @@ interface PrvTimerCardProps {
   config?: PrvTimerConfig;
   onChangeConfig: (updater: (prev: PrvTimerConfig) => PrvTimerConfig) => void;
   isModeActive?: boolean;
+  onToggleMode?: (active: boolean) => void;
 }
 
 const pad = (n: number) => n.toString().padStart(2, '0');
@@ -19,6 +20,7 @@ export function PrvTimerCard({
   config = DEFAULT_PRV_TIMER_CONFIG,
   onChangeConfig,
   isModeActive = false,
+  onToggleMode,
 }: PrvTimerCardProps) {
   // Đồng hồ thời gian thực
   const [now, setNow] = useState<Date>(new Date());
@@ -80,7 +82,7 @@ export function PrvTimerCard({
   const isPastToday = targetMinutes <= currentMinutes;
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    if (!isModeActive) return;
+    if (!isEnabled) return;
     setIsOpen(true);
     e.target.select(); // Tự động bôi đen toàn bộ số để nhập tay nhanh
   };
@@ -122,6 +124,11 @@ export function PrvTimerCard({
   };
 
   const handleToggle = (checked: boolean) => {
+    if (onToggleMode) {
+      onToggleMode(checked);
+      return;
+    }
+
     if (!isModeActive) {
       toast.warning('Vui lòng kích hoạt chế độ để tiếp tục cấu hình');
       return;
@@ -143,35 +150,45 @@ export function PrvTimerCard({
         );
       }
     } else {
-      toast.info('Đã hủy kích hoạt hẹn giờ van PRV');
+      toast.info('Đã hủy kích hoạt điều khiển đóng mở van PRV');
     }
   };
 
+  const isEnabled = onToggleMode ? isModeActive : isModeActive && config.enabled;
+
   return (
-    <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#141824] p-4 sm:p-5 shadow-xs space-y-4">
+    <div
+      id="section-prv_timer"
+      className={`rounded-2xl border transition-all ${
+        isEnabled
+          ? 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#141824] shadow-xs'
+          : 'border-slate-200/70 dark:border-slate-800/80 bg-slate-50/40 dark:bg-[#10141f]/40 opacity-75'
+      } p-4 sm:p-5 space-y-4`}
+    >
       {/* Header: Tiêu đề + Cần gạt kích hoạt */}
       <div className="flex items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-slate-800/80">
-        <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
-          Hẹn giờ van PRV
-        </h3>
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+              isEnabled
+                ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+                : 'bg-slate-200/60 dark:bg-slate-800 text-slate-500 border-slate-300 dark:border-slate-700'
+            }`}
+          >
+            <Timer className="w-4 h-4" />
+          </div>
+          <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+            Điều khiển đóng mở van PRV
+          </h3>
+        </div>
 
         {/* Cần gạt kích hoạt */}
         <div className="flex items-center gap-2.5">
-          <span
-            className={`text-xs font-bold transition-colors ${
-              config.enabled
-                ? 'text-emerald-600 dark:text-emerald-400'
-                : 'text-slate-400'
-            }`}
-          >
-            {config.enabled ? 'Đã kích hoạt' : 'Chưa kích hoạt'}
-          </span>
           <Switch
             id="prv-timer-switch"
-            checked={config.enabled}
-            disabled={!isModeActive}
+            checked={isEnabled}
             onCheckedChange={handleToggle}
-            aria-label="Cần gạt kích hoạt hẹn giờ PRV"
+            aria-label="Cần gạt kích hoạt điều khiển đóng mở van PRV"
           />
         </div>
       </div>
@@ -198,9 +215,9 @@ export function PrvTimerCard({
                 isOpen
                   ? 'border-blue-500 ring-2 ring-blue-500/20'
                   : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-              } ${!isModeActive ? 'opacity-60 cursor-not-allowed' : 'cursor-text'}`}
+              } ${!isEnabled ? 'opacity-60 cursor-not-allowed' : 'cursor-text'}`}
               onClick={() => {
-                if (!isModeActive) return;
+                if (!isEnabled) return;
                 setIsOpen(true);
                 inputRef.current?.select();
               }}
@@ -210,7 +227,7 @@ export function PrvTimerCard({
               <input
                 ref={inputRef}
                 type="text"
-                disabled={!isModeActive}
+                disabled={!isEnabled}
                 value={inputText}
                 onFocus={handleFocus}
                 onChange={handleInputChange}

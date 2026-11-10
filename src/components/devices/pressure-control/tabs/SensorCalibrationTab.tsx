@@ -15,8 +15,6 @@ interface SensorCalibrationTabProps {
 
 type LevelKey = 'level0' | 'level1' | 'level2';
 
-const UNITS = ['bar', 'mH₂O', 'psi'] as const;
-
 const LEVELS: { key: LevelKey; label: string; index: number }[] = [
   { key: 'level0', label: 'Mức áp 0', index: 0 },
   { key: 'level1', label: 'Mức áp 1 *', index: 1 },
@@ -35,27 +33,21 @@ export function SensorCalibrationTab({
     config.sensorCalibration ?? DEFAULT_SENSOR_CALIBRATION_CONFIG;
   const level2On = calib.level2.enabled ?? false;
 
-  const updateCalib = (patch: Partial<SensorCalibrationConfig>) => {
-    onChangeConfig((prev) => ({
-      ...prev,
-      sensorCalibration: {
-        ...(prev.sensorCalibration ?? DEFAULT_SENSOR_CALIBRATION_CONFIG),
-        ...patch,
-      },
-    }));
-  };
-
   const updateLevel = (key: LevelKey, patch: Partial<CalibrationLevelConfig>) => {
     onChangeConfig((prev) => {
       const cur = prev.sensorCalibration ?? DEFAULT_SENSOR_CALIBRATION_CONFIG;
       return {
         ...prev,
-        sensorCalibration: { ...cur, [key]: { ...cur[key], ...patch } },
+        sensorCalibration: {
+          ...cur,
+          unit: 'mH₂O',
+          [key]: { ...cur[key], ...patch },
+        },
       };
     });
   };
 
-  const clamp = (v: number) => Math.max(0, Math.min(100, v));
+  const clamp = (v: number) => Math.max(0, Math.min(120, v));
 
   const setLevelValue = (key: LevelKey, v: number) => {
     if (isNaN(v)) return;
@@ -68,8 +60,7 @@ export function SensorCalibrationTab({
       toast.warning('Chưa có tín hiệu áp suất');
       return;
     }
-    const converted = calib.unit === 'bar' ? live / 10 : live;
-    setLevelValue(key, converted);
+    setLevelValue(key, live);
   };
 
   const stepBtn =
@@ -77,26 +68,6 @@ export function SensorCalibrationTab({
 
   return (
     <div className="flex-1 flex flex-col gap-4 max-w-5xl mx-auto w-full py-1">
-      {/* Bộ chọn đơn vị đo */}
-      <div className="flex items-center justify-end">
-        <div className="flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80">
-          {UNITS.map((u) => (
-            <button
-              key={u}
-              type="button"
-              onClick={() => updateCalib({ unit: u })}
-              className={`px-3 h-8 rounded-lg text-xs font-mono font-bold cursor-pointer transition-all ${
-                calib.unit === u
-                  ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              {u}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* 3 mức áp */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {LEVELS.map(({ key, label }) => {
@@ -145,7 +116,7 @@ export function SensorCalibrationTab({
                     className="w-full min-w-0 self-center text-center font-mono font-extrabold text-2xl text-slate-900 dark:text-white bg-transparent outline-none"
                   />
                   <span className="self-center text-xs font-mono font-semibold text-slate-400 shrink-0">
-                    {calib.unit}
+                    mH₂O
                   </span>
                 </div>
 

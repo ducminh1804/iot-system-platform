@@ -20,13 +20,20 @@ export { formatVNNumber };
 interface PressureControlDetailViewProps {
   onBack: () => void;
   station?: DeviceStation | null;
+  deviceType?: 'pressureControl' | 'valveBreaker';
 }
 
-export function PressureControlDetailView({ onBack, station }: PressureControlDetailViewProps) {
+export function PressureControlDetailView({
+  onBack,
+  station,
+  deviceType = 'pressureControl',
+}: PressureControlDetailViewProps) {
+  const isValveBreaker = deviceType === 'valveBreaker' || station?.category === 'valveBreaker';
+
   // Thông tin định danh trạm (Tên - ID - Version)
   const [stationMeta, setStationMeta] = useState<StationMetaInfo>({
-    name: station?.name || 'Thiết bị điều khiển áp lực',
-    stationId: station?.stationId || '1015',
+    name: station?.name || (isValveBreaker ? 'Đóng ngắt van bước tự động' : 'Thiết bị điều khiển áp lực'),
+    stationId: station?.stationId || (isValveBreaker ? 'VB-301' : '1015'),
     version: station?.version || 'version 1',
   });
 
@@ -48,6 +55,9 @@ export function PressureControlDetailView({ onBack, station }: PressureControlDe
   const [activeLevel, setActiveLevel] = useState<ActivePressureLevel>(1);
   // Lưu mức áp hoạt động trước đó để khôi phục khi click lần 2 tắt Đóng nước
   const [prevLevel, setPrevLevel] = useState<1 | 2 | 3>(1);
+
+  // Trạng thái Khóa On/Off (riêng cho van bước tự động)
+  const [isLocked, setIsLocked] = useState<boolean>(false);
 
   // Cấu hình tham số trạm (Settings State)
   const [config, setConfig] = useState<PressureStationConfig>(DEFAULT_PRESSURE_CONFIG);
@@ -109,18 +119,51 @@ export function PressureControlDetailView({ onBack, station }: PressureControlDe
 
   // Xử lý khi click vào 1 trong 3 đồng hồ: Dịch kim lên mức tương ứng, 2 đồng hồ còn lại quay về 0
   const handleSelectLevel = (level: 1 | 2 | 3) => {
-    const activeMode = config.controlMechanism?.activeMode ?? 'schedule_rtc';
-    if (activeMode === 'schedule_rtc' || activeMode === 'input_pressure_priority') {
+    const cm = config.controlMechanism;
+    const activeModes =
+      cm?.activeModes && cm.activeModes.length > 0
+        ? cm.activeModes
+        : [cm?.activeMode ?? 'schedule_rtc'];
+
+    const isManual = activeModes.length === 1 && activeModes[0] === 'manual';
+    if (!isManual) {
       const modeNames: Record<string, string> = {
         schedule_rtc: 'Hẹn giờ RTC',
-        input_pressure_priority: 'Ưu tiên áp suất',
+        input_pressure_priority: 'Ưu tiên áp suất đầu vào',
+        output_pressure_control: 'Áp lực cuối nguồn',
+        prv_timer: 'Đóng mở van PRV',
       };
-      const modeName = modeNames[activeMode] || 'Tự động';
-      toast.warning(`Trạm đang chạy chế độ ${modeName}. Chỉ điều khiển được ở chế độ Thủ công.`);
+      const activeLabels = activeModes
+        .filter((m) => m !== 'manual')
+        .map((m) => modeNames[m] || m)
+        .join(' + ');
+
+      toast.warning(
+        `Trạm đang chạy chế độ ${activeLabels || 'Tự động'}. Chỉ điều khiển được ở chế độ Thủ công.`
+      );
       return;
     }
 
     const formatted = getFormattedNow();
+
+    if (isValveBreaker) {
+      if (activeLevel === 1) {
+        setActiveLevel(0);
+        setGaugeVal1(0);
+        setLastActionTimes((prev) => ({ ...prev, 1: formatted }));
+        toast.info('Đã ngắt điều khiển áp lực');
+      } else {
+        setActiveLevel(1);
+        setPrevLevel(1);
+        setGaugeVal1(config.targetP1);
+        setGaugeVal2(0);
+        setGaugeVal3(0);
+        setLastActionTimes((prev) => ({ ...prev, 1: formatted }));
+        toast.success('Đã kích hoạt điều khiển áp lực');
+      }
+      return;
+    }
+
     setActiveLevel(level);
     setPrevLevel(level);
 
@@ -143,6 +186,21 @@ export function PressureControlDetailView({ onBack, station }: PressureControlDe
       setLastActionTimes((prev) => ({ ...prev, 3: formatted }));
       toast.success('Đã kích hoạt Mở full');
     }
+  };
+
+  // Thao tác bật/tắt Khóa On/Off (dạng khóa đóng mở nắp cửa hầm)
+  const handleToggleLock = () => {
+    const formatted = getFormattedNow();
+    setIsLocked((prev) => {
+      const next = !prev;
+      if (next) {
+        toast.success('Đã kích hoạt khóa on/off');
+      } else {
+        toast.info('Đã tắt khóa on/off');
+      }
+      return next;
+    });
+    setLastActionTimes((prev) => ({ ...prev, 4: formatted }));
   };
 
   // Xử lý khi click vào ô "Đóng nước":
@@ -226,12 +284,15 @@ export function PressureControlDetailView({ onBack, station }: PressureControlDe
       {/* 2. MAIN MONITOR VIEW */}
       <div className="relative flex-1 min-h-0 w-full overflow-hidden">
         <div className="w-full h-full flex flex-col justify-between space-y-1.5 sm:space-y-2.5 lg:space-y-3">
-          {/* Middle Row: 3 Gauges + Water Shutoff Card */}
+          {/* Middle Row: Controls (2 cards cho van bước, 4 cards cho điều áp) */}
           <PressureLevelControls
+            deviceType={isValveBreaker ? 'valveBreaker' : 'pressureControl'}
             activeLevel={activeLevel}
             gaugeVal1={gaugeVal1}
             gaugeVal2={gaugeVal2}
             gaugeVal3={gaugeVal3}
+            isLocked={isLocked}
+            onToggleLock={handleToggleLock}
             lastActionTimes={lastActionTimes}
             onSelectLevel={handleSelectLevel}
             onShutoffWater={handleShutoffWater}

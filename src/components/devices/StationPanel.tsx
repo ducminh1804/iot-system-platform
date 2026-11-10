@@ -35,6 +35,8 @@ export const StationPanel = React.memo(function StationPanel({
   const activeLevel: ActivePressureLevel =
     (station.activeLevel as ActivePressureLevel) ?? 1;
 
+  const isValveBreaker = station.category === 'valveBreaker';
+
   const [config] = useState<PressureStationConfig>(DEFAULT_PRESSURE_CONFIG);
 
   const gaugeVal1 = activeLevel === 1 ? config.targetP1 : 0;
@@ -89,9 +91,10 @@ export const StationPanel = React.memo(function StationPanel({
           </button>
         </div>
 
-        {/* 4 Gauges Row ONLY: readOnly = true (Chỉ được xem, bấm không có tác dụng) */}
+        {/* Controls Row: readOnly = true (Chỉ được xem, bấm không có tác dụng) */}
         <div className="pointer-events-none select-none">
           <PressureLevelControls
+            deviceType={isValveBreaker ? 'valveBreaker' : 'pressureControl'}
             activeLevel={activeLevel}
             gaugeVal1={gaugeVal1}
             gaugeVal2={gaugeVal2}
@@ -121,9 +124,10 @@ export const StationPanel = React.memo(function StationPanel({
         rtcTime={rtcTime}
       />
 
-      {/* 2. Hàng 4 đồng hồ mức áp: readOnly = true */}
+      {/* 2. Hàng điều khiển: readOnly = true */}
       <div className="pointer-events-none select-none">
         <PressureLevelControls
+          deviceType={isValveBreaker ? 'valveBreaker' : 'pressureControl'}
           activeLevel={activeLevel}
           gaugeVal1={gaugeVal1}
           gaugeVal2={gaugeVal2}

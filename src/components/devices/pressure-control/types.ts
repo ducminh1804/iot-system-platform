@@ -45,18 +45,73 @@ export interface PulseMeterConfig {
 }
 
 export interface CalibrationLevelConfig {
-  value: number; // Giá trị áp suất (bar)
+  value: number; // Giá trị áp suất (mH₂O)
   enabled?: boolean; // Cho mức áp 2 tùy chọn
   rawAdc?: number; // ADC thô / mV nếu cần
 }
 
 export interface SensorCalibrationConfig {
   rangeMin: number; // Min dải đo (VD: 0)
-  rangeMax: number; // Max dải đo (VD: 10)
-  unit: string; // 'bar' | 'mH2O' | 'psi'
+  rangeMax: number; // Max dải đo (VD: 100)
+  unit: string; // Mặc định cố định 'mH₂O'
   level0: CalibrationLevelConfig; // Mức áp 0
   level1: CalibrationLevelConfig; // Mức áp 1 (Bắt buộc)
   level2: CalibrationLevelConfig; // Mức áp 2 (Tùy chọn)
+}
+
+export type ModbusBrandId =
+  | 'abb'
+  | 'siemens'
+  | 'krohne'
+  | 'endress_hauser'
+  | 'sensus'
+  | 'custom';
+
+export type ModbusDataType =
+  | 'float32'
+  | 'float32_swapped'
+  | 'int32'
+  | 'uint32'
+  | 'int16'
+  | 'uint16'
+  | 'double64';
+
+export type ModbusByteOrder = 'CDAB' | 'ABCD' | 'BADC' | 'DCBA';
+
+export interface ModbusRegisterField {
+  address: number; // Địa chỉ thanh ghi (VD: 40001, 30001)
+  dataType: ModbusDataType; // Kiểu dữ liệu
+  multiplier?: number; // Hệ số nhân
+  unit?: string; // Đơn vị đo
+  enabled?: boolean;
+}
+
+export interface ModbusUploadedCode {
+  fileName: string;
+  fileSize: number; // bytes
+  uploadedAt: string; // ISO string
+}
+
+export interface ModbusMeterConfig {
+  enabled: boolean; // Bật truyền thông Modbus
+  brand: ModbusBrandId; // Hãng đồng hồ
+  customDeviceName?: string; // Tên thiết bị nếu là thiết bị mới
+  model?: string; // Model đồng hồ
+  slaveId: number; // Địa chỉ trạm Slave ID (1 - 247)
+  baudRate: number; // Tốc độ truyền (9600, 19200...)
+  parity: 'none' | 'even' | 'odd'; // Parity
+  dataBits: 8 | 7; // Data bits
+  stopBits: 1 | 2; // Stop bits
+  byteOrder: ModbusByteOrder; // Thứ tự byte
+  functionCode: 3 | 4; // Function code (03: Holding, 04: Input)
+  pollIntervalSeconds: number; // Chu kỳ đọc dữ liệu (giây)
+  uploadedCode?: ModbusUploadedCode; // File mã đọc tùy chỉnh đã nạp
+
+  // Bản đồ thanh ghi
+  flowRate: ModbusRegisterField; // Lưu lượng tức thời
+  forwardTotal: ModbusRegisterField; // Chỉ số tích lũy thuận
+  reverseTotal: ModbusRegisterField; // Chỉ số tích lũy nghịch
+  pressure?: ModbusRegisterField; // Áp lực nước (tùy chọn)
 }
 
 export interface FlowAlarmConfig {
@@ -97,7 +152,14 @@ export type ControlModeId =
   | 'manual'
   | 'schedule_rtc'
   | 'input_pressure_priority'
+  | 'output_pressure_control'
   | 'prv_timer';
+
+export interface OutputPressureConfig {
+  p1: number; // Mức áp 1 (mH₂O)
+  p2: number; // Mức áp 2 (mH₂O)
+  pFull: number; // Mở full (mH₂O)
+}
 
 export interface PrvTimerConfig {
   enabled: boolean; // Cần gạt kích hoạt khung giờ
@@ -131,10 +193,12 @@ export interface ThresholdConfig {
 
 export interface ControlMechanismConfig {
   activeMode: ControlModeId;
+  activeModes?: ControlModeId[];
   schedules: ScheduleSlot[];
   lowerThreshold: ThresholdConfig;
   upperThreshold: ThresholdConfig;
   prvTimer?: PrvTimerConfig;
+  outputPressure?: OutputPressureConfig;
 }
 
 export interface PressureStationConfig {
@@ -160,6 +224,7 @@ export interface PressureStationConfig {
   sensorCalibration?: SensorCalibrationConfig;
   flowAlarm?: FlowAlarmConfig;
   anomalyAlarm?: AnomalyAlarmConfig;
+  modbusMeter?: ModbusMeterConfig;
 }
 
 export type ActivePressureLevel = 0 | 1 | 2 | 3;

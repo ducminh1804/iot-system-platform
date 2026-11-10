@@ -14,18 +14,20 @@ interface ScheduleRtcListProps {
   overlappingIds: Set<number>;
   onUpdateSchedule: (slotId: number, patch: Partial<ScheduleSlot>) => void;
   onAutoChainSchedules?: () => void;
+  borderless?: boolean;
 }
 
 export function ScheduleRtcList({
   schedules,
   overlappingIds,
   onUpdateSchedule,
+  borderless = false,
 }: ScheduleRtcListProps) {
   return (
     <div className="space-y-3">
       {/* Banner cảnh báo phát hiện khung giờ bị chồng lấn giữa các giai đoạn */}
       {overlappingIds.size > 0 && (
-        <div className="flex items-center gap-2.5 p-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+        <div className="flex items-center gap-2.5 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
           <AlertTriangle className="w-4 h-4 shrink-0 text-amber-500" />
           <span className="text-xs font-bold">
             Phát hiện khung giờ bị chồng lấn giữa các giai đoạn
@@ -34,7 +36,13 @@ export function ScheduleRtcList({
       )}
 
       {/* Danh sách 5 giai đoạn hẹn giờ RTC */}
-      <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#141824] divide-y divide-slate-100 dark:divide-slate-800/80 shadow-xs overflow-hidden">
+      <div
+        className={
+          borderless
+            ? 'divide-y divide-slate-100 dark:divide-slate-800/80 overflow-hidden rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-slate-50/40 dark:bg-[#0c0f17]/40'
+            : 'rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#141824] divide-y divide-slate-100 dark:divide-slate-800/80 shadow-xs overflow-hidden'
+        }
+      >
         {schedules.map((slot) => {
           const isOverlapping = slot.enabled && overlappingIds.has(slot.id);
           const switchId = `schedule-switch-${slot.id}`;

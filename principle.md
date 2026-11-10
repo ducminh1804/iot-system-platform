@@ -24,11 +24,15 @@
 1. **Nguyên tắc Độc quyền Áp lực:** Tại một thời điểm chỉ duy nhất **1 trạng thái áp lực** được phép `ON` (Mức áp 1, Mức áp 2, hoặc Mở full). Khi chuyển trạng thái, hệ thống phải tự động đóng các van áp lực còn lại.
 2. **Độc lập Van 4:** Van số 4 (Đóng/Mở nước PRV) hoạt động độc lập hoàn toàn với các chế độ thời gian thực và ưu tiên áp lực (trừ lệnh đóng đồng thời khi hẹn giờ nước kích hoạt). Chế độ thời gian thực và ưu tiên áp lực thông thường KHÔNG can thiệp vào trạng thái mở cơ bản của Van 4 nếu không có lịch đóng nước.
 
-### Thứ Tự Ưu Tiên Chế Độ (Priority Level):
-- **Cấp 1 (Cao nhất):** Hẹn giờ điều khiển van PRV / Đóng mở nước Van 4 (One-shot Timer - Khóa dòng chảy khi đến mốc lịch hẹn).
-- **Cấp 2:** Ưu tiên áp suất đầu vào (Cứu áp khi $P < 1.5\text{ bar}$).
-- **Cấp 3:** Hẹn giờ theo thời gian thực RTC (Chạy theo lịch trình 24h tuần hoàn 5 mốc).
-- **Cấp 4 (Thấp nhất - Bị vô hiệu hóa khi bật Hẹn giờ / Ưu tiên):** Điều khiển Thủ công (Manual).
+### Thứ Tự Ưu Tiên & Quy Tắc Đóng/Ngắt Chế Độ (Nguyên Tắc An Toàn Vận Hành):
+> [!IMPORTANT]
+> **Hệ thống KHÔNG tự ý ngắt chế độ đang chạy:** Nhằm đảm bảo an toàn tuyệt đối cho mạng lưới SCADA cấp nước, hệ thống không tự ý tắt chế độ đang hoạt động khi người dùng gạt công tắc chế độ khác. Thay vào đó, hệ thống sẽ **chặn lệnh kích hoạt và hiển thị thông báo cảnh báo** yêu cầu người vận hành tự tay ngắt chế độ xung đột trước (`Phải tắt [A] để bật [B]`).
+
+- **Thủ công (Manual):** Xung đột với mọi chế độ tự động khác. Muốn bật Thủ công, người dùng phải tắt các chế độ tự động đang chạy.
+- **Hẹn giờ theo thời gian thực (RTC):** Xung đột với Thủ công, PRV, Áp lực cuối nguồn; riêng **Ưu tiên áp suất đầu vào vẫn cho phép chạy song song**.
+- **Ưu tiên áp suất đầu vào:** Có thể hoạt động song song cùng **Thời gian thực (RTC)**; xung đột với Thủ công, PRV, Áp lực cuối nguồn.
+- **Điều khiển đóng mở van PRV:** Xung đột với mọi chế độ khác. Phải tắt toàn bộ các chế độ khác trước khi bật PRV.
+- **Điều khiển theo áp lực cuối nguồn:** Xung đột với mọi chế độ khác; cấu hình gồm 3 mức áp suất mục tiêu: Mức áp 1, Mức áp 2, và Mở full.
 
 ---
 
@@ -42,13 +46,14 @@
 | **Thời Gian Thực (RTC)** *(5 mốc 24h tuần hoàn)* | Đến mốc thời gian đã set (Mức 1, Mức 2 hoặc Mở full) | Kích hoạt van tương ứng mốc set | • Mức 1: Hút Relay 1 + 4 + 6 (10s) <br>• Mức 2: Hút Relay 3 + 2 + 6 (10s) <br>• Mở full: Hút Relay 5 + 2 + 4 (10s) |
 | **Ưu Tiên Áp Suất - [Ngưỡng Dưới]** | Áp lực đầu vào $P < 1.5\text{ bar}$ liên tục 3 chu kỳ lấy mẫu ($= 5$ phút) | Tạm khóa RTC schedule. Ép Mở Full (Van 3) | • Hút Relay 5 (Mở Van 3) <br>• Hút Relay 2 (Đóng Van 1) <br>• Hút Relay 4 (Đóng Van 2) <br>*(Van 4 giữ nguyên)* |
 | **Ưu Tiên Áp Suất - [Ngưỡng Trên]** | Áp lực đầu vào $P \ge 1.8\text{ bar}$ liên tục 3 lần đo liên tiếp | Hủy ưu tiên áp lực. Trả về RTC Schedule hiện tại | Quét lại Setpoint RTC hiện tại và kích hoạt Relay tương ứng (VD: Hút Relay 3 + 2 + 6 nếu đang ở mốc áp 2) |
-| **Cơ Chế Số 4: Hẹn Giờ Van PRV (One-Shot)** | Cần gạt `ON` & Đồng hồ RTC trạm chạm đúng mốc giờ hẹn | Khóa nguồn PRV (Van 4) & đóng toàn bộ van áp | • Giờ Đóng: Hút Relay 7 (10s) + Hút Relay 2,4,6 (10s) <br>• Giờ Mở lại: Hút Relay 8 (10s) + khôi phục van áp theo Setpoint |
+| **Điều Khiển Đóng Mở Van PRV (One-Shot)** | Cần gạt `ON` & Đồng hồ RTC trạm chạm đúng mốc giờ hẹn | Khóa nguồn PRV (Van 4) & đóng toàn bộ van áp | • Giờ Đóng: Hút Relay 7 (10s) + Hút Relay 2,4,6 (10s) <br>• Giờ Mở lại: Hút Relay 8 (10s) + khôi phục van áp theo Setpoint |
+| **Điều Khiển Áp Lực Cuối Nguồn** | Chế độ kích hoạt & Cảm biến áp cuối nguồn truyền về trạm | Tự động điều chỉnh Van 1, 2, 3 theo 3 mức áp | Tự động kích hoạt mức áp 1, mức áp 2 hoặc mở full để duy trì áp lực điểm cuối mạng lưới |
 
 ---
 
-## 4. CƠ CHẾ ĐIỀU KHIỂN SỐ 4: HẸN GIỜ ĐIỀU KHIỂN VAN PRV (ONE-SHOT TIMER)
+## 4. CƠ CHẾ ĐIỀU KHIỂN SỐ 4: ĐIỀU KHIỂN ĐÓNG MỞ VAN PRV (ONE-SHOT TIMER)
 
-Chế độ Hẹn giờ điều khiển van PRV (Van 4) là cơ chế can thiệp tạm thời 1 lần (One-shot):
+Chế độ Điều khiển đóng mở van PRV (Van 4) là cơ chế can thiệp tạm thời 1 lần (One-shot):
 - **1 Input thời gian duy nhất (`HH:mm`):** Nhập trực tiếp Giờ : Phút trong ngày. Khi click vào ô nhập, hệ thống tự động bôi đen toàn bộ số để người dùng nhập đè nhanh từ bàn phím, đồng thời xổ danh sách chọn ở dưới.
 - **Cần gạt kích hoạt (Toggle Switch):** Bật/tắt kích hoạt khung giờ hẹn. Ngay cả khi đã kích hoạt, người dùng vẫn được phép chỉnh sửa thời gian và bấm lưu để cập nhật xuống trạm.
 - **Cảnh báo thông minh:** Chỉ hiển thị cảnh báo `Đã qua giờ hiện tại` khi mốc giờ hẹn nhỏ hơn hoặc bằng giờ hiện tại của thiết bị (lệnh sẽ kích hoạt vào ngày mai).
@@ -71,6 +76,35 @@ Quy chuẩn các thông số cài đặt cho đồng hồ đo đếm xung nướ
 
 > [!NOTE]
 > **Loại bỏ lưu lượng tức thời (Bỏ Flow Rate):** Tab cấu hình Đồng hồ xung chỉ duy trì các thông số đo đếm xung và thể tích tích lũy, **không đưa chỉ số lưu lượng tức thời (`Flow Rate - m³/h`) vào danh mục cài đặt này** để giữ giao diện chuẩn xác và tập trung.
+
+---
+
+## 6. THIẾT LẬP MODBUS ĐỒNG HỒ NƯỚC (MODBUS SETTINGS)
+
+Hỗ trợ cấu hình bản đồ thanh ghi Modbus với các dòng đồng hồ điện từ phổ biến hoặc thiết bị mới:
+
+1. **Preset các hãng đồng hồ tiêu chuẩn:**
+   - **ABB:** AquaMaster 4 / WaterMaster (Thanh ghi: Flow `40001`, Fwd Total `40003`, Rev Total `40005`).
+   - **Siemens:** SITRANS F M MAG 8000 (Thanh ghi: Flow `30001`, Fwd Total `30003`, Rev Total `30005`).
+   - **Krohne:** WATERFLUX 3070 / OPTIFLUX (Thanh ghi: Flow `40001`, Fwd Total `40005`, Rev Total `40009`).
+   - **Endress+Hauser:** Proline Promag W 400 (Thanh ghi: Flow `42007`, Fwd Total `42011`, Rev Total `42015`).
+   - **Sensus:** MeiStream / PolluFlow (Thanh ghi: Flow `40001`, Fwd Total `40003`, Rev Total `40005`).
+2. **Cấu hình thanh ghi cho thiết bị mới (Custom Modbus):**
+   - Cho phép người dùng tự do nhập tên thiết bị mới và model.
+   - Tự do gán địa chỉ thanh ghi (Register Address), kiểu dữ liệu (Float32, Int32, UInt32, Double64...) và hệ số nhân cho:
+     - Lưu lượng tức thời (`Flow Rate - m³/h`)
+     - Chỉ số tích lũy thuận (`Forward Total - m³`)
+     - Chỉ số tích lũy nghịch (`Reverse Total - m³`)
+     - Áp lực nước (`Pressure - mH₂O` - tùy chọn)
+
+---
+
+## 7. ĐÓNG NGẮT VAN BƯỚC TỰ ĐỘNG (AUTOMATIC VALVE BREAKER)
+
+Cơ chế điều khiển của dòng thiết bị Đóng ngắt van bước tự động được tinh gọn thành 2 khối thao tác chính:
+1. **Khối Áp Lực:** Bấm mở kích hoạt điều khiển áp lực như thông thường; kim đồng hồ hiển thị giá trị áp suất mục tiêu / thực tế (`mH₂O`).
+2. **Khối Khóa On/Off:** Dạng khóa điện đóng mở nắp cửa hầm van kỹ thuật; sử dụng biểu tượng ổ khóa (`Lock` / `Unlock`) hiển thị trạng thái Bật / Tắt an toàn.
+3. **Tính Đồng Nhất:** Mọi cấu hình thông số kỹ thuật, lưới đo đạc telemetry (lưu lượng, vận tốc, áp vào, áp ra, chênh áp, pin mặt trời, pin logger) và modal cài đặt thông số bên trong đều được giữ nguyên vẹn đồng nhất với thiết bị điều khiển áp lực.
 
 ---
 *Tài liệu ban hành bởi: Ban Kỹ thuật / Nền Tảng Low Power*

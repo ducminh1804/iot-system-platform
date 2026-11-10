@@ -12,23 +12,34 @@ export interface ControlModeOption {
 interface ControlModeSelectorProps {
   modes: ControlModeOption[];
   viewingMode: ControlModeId;
-  activeMode: ControlModeId;
+  activeMode?: ControlModeId;
+  activeModes?: ControlModeId[];
   onSelectViewingMode: (modeId: ControlModeId) => void;
   onApplyMode: () => void;
+  onDeactivateMode?: () => void;
 }
 
 export function ControlModeSelector({
   modes,
   viewingMode,
   activeMode,
+  activeModes,
   onSelectViewingMode,
   onApplyMode,
+  onDeactivateMode,
 }: ControlModeSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
 
+  const effectiveActiveModes =
+    activeModes && activeModes.length > 0
+      ? activeModes
+      : activeMode
+      ? [activeMode]
+      : ['schedule_rtc'];
+
   const currentViewingMode = modes.find((m) => m.id === viewingMode) || modes[0];
   const CurrentIcon = currentViewingMode.icon;
-  const isCurrentViewActive = viewingMode === activeMode;
+  const isCurrentViewActive = effectiveActiveModes.includes(viewingMode);
 
   return (
     <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#141824] p-3 sm:px-4 shadow-xs">
@@ -61,7 +72,7 @@ export function ControlModeSelector({
               <div className="absolute left-0 top-[calc(100%+6px)] z-40 w-full sm:max-w-md max-h-72 overflow-y-auto bg-white dark:bg-[#141822] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-1.5 flex flex-col gap-1 animate-in fade-in zoom-in-95 duration-100">
                 {modes.map((mode) => {
                   const isViewing = mode.id === viewingMode;
-                  const isStationActive = mode.id === activeMode;
+                  const isStationActive = effectiveActiveModes.includes(mode.id);
                   const Icon = mode.icon;
 
                   return (
@@ -99,12 +110,24 @@ export function ControlModeSelector({
           )}
         </div>
 
-        {/* Nút Áp dụng / Badge Trạng thái Đang áp dụng */}
+        {/* Nút Áp dụng / Trạng thái Đang áp dụng / Tắt chế độ */}
         <div className="shrink-0 flex items-center">
           {isCurrentViewActive ? (
-            <div className="inline-flex items-center gap-1.5 h-10 px-3 sm:px-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Đang áp dụng</span>
+            <div className="flex items-center gap-2">
+              <div className="inline-flex items-center gap-1.5 h-10 px-3 sm:px-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Đang áp dụng</span>
+              </div>
+              {viewingMode !== 'manual' && onDeactivateMode && (
+                <button
+                  type="button"
+                  onClick={onDeactivateMode}
+                  className="inline-flex items-center justify-center h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#181D2A] text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:border-rose-300 dark:hover:border-rose-900/50 text-xs font-bold transition-all cursor-pointer shadow-2xs active:scale-95"
+                  title={`Tắt "${currentViewingMode.name}"`}
+                >
+                  Tắt chế độ
+                </button>
+              )}
             </div>
           ) : (
             <button
